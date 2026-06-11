@@ -1,0 +1,3700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Personajes de Rol</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0f1020;
+      --panel:#17182e;
+      --panel-2:#202240;
+      --text:#f7f7ff;
+      --muted:#b7b9d8;
+      --line:#34375f;
+      --accent:#ff4fd8;
+      --accent-2:#6de6ff;
+      --good:#76ffb2;
+      --warn:#ffd166;
+      --danger:#ff6b6b;
+      --shadow:0 18px 45px rgba(0,0,0,.35);
+      --game-gold:#e5b75c;
+      --game-cyan:#30e3d0;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255,79,216,.25), transparent 30%),
+        radial-gradient(circle at top right, rgba(109,230,255,.18), transparent 35%),
+        linear-gradient(135deg, #090a17, var(--bg));
+      min-height:100vh;
+      padding:24px;
+    }
+
+    .app{
+      width:min(1300px, 100%);
+      margin:auto;
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:22px;
+    }
+
+    header{
+      grid-column:1 / -1;
+      background:rgba(23,24,46,.82);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.6rem, 4vw, 2.5rem);
+      letter-spacing:.5px;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .badge{
+      border:1px solid rgba(109,230,255,.45);
+      background:rgba(109,230,255,.1);
+      color:#dffaff;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .card{
+      background:rgba(23,24,46,.88);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .profile{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-self:start;
+    }
+
+    .image-box{
+      width:100%;
+      height:250px;
+      border-radius:22px;
+      border:2px dashed rgba(255,255,255,.22);
+      background:
+        linear-gradient(135deg, rgba(255,79,216,.13), rgba(109,230,255,.10)),
+        #101225;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .image-box img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:none;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,.5));
+    }
+
+    .image-placeholder{
+      text-align:center;
+      padding:20px;
+      color:var(--muted);
+    }
+
+    .image-placeholder strong{
+      display:block;
+      color:var(--text);
+      margin-bottom:8px;
+    }
+
+    label{
+      color:var(--muted);
+      font-size:.9rem;
+      display:block;
+      margin-bottom:7px;
+    }
+
+    input, textarea, select{
+      width:100%;
+      border:none;
+      outline:none;
+      background:var(--panel-2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 13px;
+      font:inherit;
+    }
+
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+
+    input[type="file"]{
+      padding:10px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .main{
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+    }
+
+    .top-stats{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+    }
+
+    .mini{
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:15px;
+      text-align:center;
+    }
+
+    .mini span{
+      display:block;
+      color:var(--muted);
+      font-size:.85rem;
+      margin-bottom:6px;
+    }
+
+    .mini strong{
+      font-size:1.45rem;
+      word-break:break-word;
+    }
+
+    .progress{
+      height:14px;
+      background:#0b0c19;
+      border:1px solid var(--line);
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:10px;
+    }
+
+    .bar{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition:.25s ease;
+    }
+
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    h2{
+      margin:0;
+      font-size:1.25rem;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px;
+    }
+
+    .stat{
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .stat-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+      gap:10px;
+    }
+
+    .stat-name{
+      font-weight:800;
+    }
+
+    .stat-value{
+      color:var(--accent-2);
+      font-weight:900;
+      font-size:1.15rem;
+    }
+
+    .stat-controls{
+      display:grid;
+      grid-template-columns: 1fr auto auto;
+      gap:8px;
+      align-items:center;
+    }
+
+    .stat-controls input{
+      padding:9px;
+    }
+
+    button{
+      border:none;
+      color:var(--text);
+      background:linear-gradient(135deg, var(--accent), #8d5cff);
+      border-radius:14px;
+      padding:11px 14px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.16s ease;
+      box-shadow:0 8px 18px rgba(0,0,0,.25);
+      font:inherit;
+    }
+
+    button:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.06);
+    }
+
+    button.secondary{
+      background:rgba(109,230,255,.12);
+      border:1px solid rgba(109,230,255,.35);
+      color:#dffaff;
+      box-shadow:none;
+    }
+
+    button.good{
+      background:linear-gradient(135deg, #23c483, #76ffb2);
+      color:#082417;
+    }
+
+    button.warn{
+      background:linear-gradient(135deg, #f59e0b, #ffd166);
+      color:#251603;
+    }
+
+    button.danger{
+      background:linear-gradient(135deg, #ff4d6d, #ff758f);
+      color:white;
+    }
+
+    .tools{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+    }
+
+    .footer-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .notice{
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.45;
+      margin-top:10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:4px 9px;
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:.78rem;
+      margin-left:6px;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .skill-summary{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.72);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      z-index:50;
+    }
+
+    .modal.show{
+      display:flex;
+    }
+
+    .modal-content{
+      width:min(980px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#17182e;
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:0 25px 80px rgba(0,0,0,.55);
+      padding:20px;
+    }
+
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .modal-header h2{
+      margin:0;
+    }
+
+    .form-3{
+      display:grid;
+      grid-template-columns: 1.2fr .7fr .6fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .form-2{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .items-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .item-card{
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+    }
+
+    .item-card strong{
+      font-size:1.05rem;
+    }
+
+    .item-card small{
+      color:var(--muted);
+      display:block;
+      margin-top:4px;
+      line-height:1.45;
+    }
+
+    .item-actions{
+      display:flex;
+      gap:8px;
+      align-items:start;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .preview-shell{
+      overflow:hidden;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:#090a17;
+      padding:12px;
+    }
+
+    .export-card{
+      width:1200px;
+      height:675px;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.14), transparent 45%, rgba(0,0,0,.14)),
+        linear-gradient(180deg, #394651, #252f3a);
+      border:2px solid rgba(255,255,255,.18);
+      color:#f8fbff;
+      display:grid;
+      grid-template-columns: 390px 420px 1fr;
+      overflow:hidden;
+      position:relative;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      transform-origin: top left;
+      transition: transform .2s ease;
+    }
+
+    .export-top{
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:54px;
+      background:rgba(18,23,30,.72);
+      border-bottom:1px solid rgba(255,255,255,.12);
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      gap:18px;
+      padding:0 28px;
+      z-index:3;
+      font-weight:800;
+      color:#eef2f8;
+      overflow:hidden;
+    }
+
+    .export-token{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      white-space:nowrap;
+    }
+
+    .export-token .symbol{
+      font-size:20px;
+      line-height:1;
+      filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));
+    }
+
+    .export-col{
+      padding:72px 20px 20px;
+      position:relative;
+      z-index:1;
+    }
+
+    .export-left{
+      border-right:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(180deg, rgba(24,31,40,.55), rgba(20,25,33,.2));
+    }
+
+    .export-center{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-end;
+      padding-bottom:20px;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,.08), transparent 48%);
+    }
+
+    .export-right{
+      border-left:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(180deg, rgba(24,31,40,.45), rgba(20,25,33,.2));
+    }
+
+    .export-tabs{
+      position:absolute;
+      top:58px;
+      right:22px;
+      display:flex;
+      gap:44px;
+      color:#d8dde6;
+      font-weight:700;
+      z-index:3;
+    }
+
+    .export-tabs span:first-child{
+      color:white;
+      border-bottom:2px solid #e9f7ff;
+      padding-bottom:8px;
+      box-shadow:0 10px 18px rgba(109,230,255,.18);
+    }
+
+    .export-title{
+      font-size:17px;
+      color:#d7dde7;
+      margin-bottom:10px;
+    }
+
+    .export-power-row{
+      display:flex;
+      gap:28px;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(255,255,255,.16);
+      margin-bottom:16px;
+    }
+
+    .export-power{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .export-power b{
+      color:var(--game-gold);
+      font-size:22px;
+    }
+
+    .export-power span{
+      color:#d7dde7;
+      font-size:12px;
+    }
+
+    .export-stat-list{
+      display:grid;
+      gap:10px;
+      font-size:16px;
+    }
+
+    .export-stat-row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+      align-items:center;
+    }
+
+    .export-stat-row span:first-child{
+      color:#f0f4fb;
+    }
+
+    .export-stat-row:nth-child(-n+3) span:first-child,
+    .export-stat-row:nth-child(-n+3) span:last-child{
+      color:var(--game-cyan);
+      font-weight:800;
+    }
+
+    .export-stat-row span:last-child{
+      color:#f7f9ff;
+      font-weight:700;
+    }
+
+    .export-character-img{
+      max-width:360px;
+      max-height:560px;
+      object-fit:contain;
+      display:none;
+      filter:drop-shadow(0 18px 16px rgba(0,0,0,.45));
+    }
+
+    .export-character-placeholder{
+      width:300px;
+      height:420px;
+      border:2px dashed rgba(255,255,255,.2);
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#d7dde7;
+      padding:20px;
+      background:rgba(0,0,0,.14);
+    }
+
+    .export-nameplate{
+      position:absolute;
+      left:30px;
+      right:30px;
+      bottom:20px;
+      background:rgba(0,0,0,.34);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px 14px;
+      text-align:center;
+      backdrop-filter:blur(5px);
+    }
+
+    .export-nameplate strong{
+      display:block;
+      font-size:22px;
+      color:#fff;
+      margin-bottom:3px;
+    }
+
+    .export-nameplate span{
+      display:block;
+      color:#d4dbe6;
+      font-size:13px;
+    }
+
+    .level-frame{
+      width:138px;
+      min-height:260px;
+      margin:8px auto 20px;
+      border:2px solid rgba(177,197,215,.25);
+      border-radius:4px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:rgba(0,0,0,.08);
+    }
+
+    .level-frame::before,
+    .level-frame::after{
+      content:"";
+      position:absolute;
+      left:18px;
+      right:18px;
+      height:2px;
+      background:rgba(177,197,215,.16);
+    }
+
+    .level-frame::before{top:18px;}
+    .level-frame::after{bottom:18px;}
+
+    .level-frame span{
+      color:#fff;
+      font-size:16px;
+      margin-bottom:8px;
+    }
+
+    .level-frame strong{
+      color:var(--game-gold);
+      font-size:44px;
+      line-height:1;
+    }
+
+    .export-right-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px 16px;
+      margin-bottom:16px;
+      padding-bottom:16px;
+      border-bottom:1px solid rgba(255,255,255,.17);
+    }
+
+    .export-skill-line{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:8px;
+      color:#f3ead7;
+      font-size:16px;
+      align-items:center;
+    }
+
+    .export-skill-line b{
+      color:var(--game-gold);
+    }
+
+    .export-abilities{
+      display:grid;
+      gap:9px;
+      max-height:210px;
+      overflow:hidden;
+    }
+
+    .export-ability{
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:12px;
+      padding:9px 10px;
+    }
+
+    .export-ability strong{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:14px;
+      color:#fff;
+      margin-bottom:3px;
+    }
+
+    .export-ability small{
+      display:block;
+      color:#cdd4de;
+      line-height:1.28;
+      font-size:11px;
+    }
+
+    @media (max-width: 950px){
+      .app{
+        grid-template-columns:1fr;
+      }
+      .top-stats{
+        grid-template-columns:repeat(2, 1fr);
+      }
+      .stats-grid{
+        grid-template-columns:1fr;
+      }
+      .tools{
+        grid-template-columns:1fr;
+      }
+      header{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .form-3,
+      .form-2{
+        grid-template-columns:1fr;
+      }
+      .skill-summary{
+        grid-template-columns:1fr;
+      }
+    }
+  
+    .rule-effect{
+      color:var(--good);
+      font-size:.88rem;
+      margin-top:6px;
+      line-height:1.35;
+    }
+
+    @media (max-width: 600px){
+      body{
+        padding:10px;
+      }
+
+      .app{
+        gap:14px;
+      }
+
+      .card{
+        padding:14px;
+        border-radius:18px;
+      }
+
+      .image-box{
+        height:190px;
+      }
+
+      .top-stats{
+        grid-template-columns:1fr;
+      }
+
+      .mini{
+        padding:12px;
+      }
+
+      .stats-grid{
+        gap:10px;
+      }
+
+      .section-title{
+        align-items:flex-start;
+      }
+
+      button{
+        width:100%;
+      }
+
+      .footer-actions,
+      .tools{
+        grid-template-columns:1fr;
+        flex-direction:column;
+      }
+
+      .modal{
+        padding:10px;
+        align-items:flex-start;
+      }
+
+      .modal-content{
+        max-height:96vh;
+        border-radius:18px;
+        padding:14px;
+      }
+    }
+
+    body[data-device="celular"] .preview-shell{
+      padding:8px;
+    }
+
+    body[data-device="tablet"] .app{
+      grid-template-columns:1fr;
+    }
+
+  
+    /* Ajustes automáticos por tamaño real de pantalla */
+    body[data-screen="xs"],
+    body[data-screen="sm"]{
+      padding:10px;
+    }
+
+    body[data-screen="xs"] .app,
+    body[data-screen="sm"] .app,
+    body[data-screen="md"] .app{
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+
+    body[data-screen="xs"] header,
+    body[data-screen="sm"] header,
+    body[data-screen="md"] header{
+      flex-direction:column;
+      align-items:flex-start;
+      padding:16px;
+      border-radius:18px;
+    }
+
+    body[data-screen="xs"] .card,
+    body[data-screen="sm"] .card{
+      padding:14px;
+      border-radius:18px;
+    }
+
+    body[data-screen="xs"] .image-box{
+      height:170px;
+    }
+
+    body[data-screen="sm"] .image-box{
+      height:210px;
+    }
+
+    body[data-screen="md"] .image-box{
+      height:240px;
+    }
+
+    body[data-screen="xs"] .top-stats,
+    body[data-screen="sm"] .top-stats{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="md"] .top-stats{
+      grid-template-columns:repeat(2, 1fr);
+    }
+
+    body[data-screen="xs"] .stats-grid,
+    body[data-screen="sm"] .stats-grid,
+    body[data-screen="md"] .stats-grid{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="xs"] .skill-summary,
+    body[data-screen="sm"] .skill-summary{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="md"] .skill-summary{
+      grid-template-columns:repeat(3, 1fr);
+    }
+
+    body[data-screen="xs"] .tools,
+    body[data-screen="sm"] .tools{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="md"] .tools{
+      grid-template-columns:repeat(2, 1fr);
+    }
+
+    body[data-screen="xs"] .grid-2,
+    body[data-screen="sm"] .grid-2{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="xs"] button,
+    body[data-screen="sm"] button{
+      width:100%;
+    }
+
+    body[data-screen="xs"] .footer-actions,
+    body[data-screen="sm"] .footer-actions{
+      flex-direction:column;
+    }
+
+    body[data-screen="xs"] .footer-actions button,
+    body[data-screen="sm"] .footer-actions button{
+      width:100%;
+    }
+
+    body[data-screen="xs"] .form-3,
+    body[data-screen="sm"] .form-3,
+    body[data-screen="md"] .form-3,
+    body[data-screen="xs"] .form-2,
+    body[data-screen="sm"] .form-2{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="xs"] .modal,
+    body[data-screen="sm"] .modal{
+      padding:8px;
+      align-items:flex-start;
+    }
+
+    body[data-screen="xs"] .modal-content,
+    body[data-screen="sm"] .modal-content{
+      border-radius:16px;
+      padding:14px;
+      max-height:97vh;
+    }
+
+    body[data-screen="xs"] .item-card,
+    body[data-screen="sm"] .item-card{
+      grid-template-columns:1fr;
+    }
+
+    body[data-screen="xs"] .item-actions,
+    body[data-screen="sm"] .item-actions{
+      justify-content:stretch;
+    }
+
+    body[data-screen="xs"] .preview-shell,
+    body[data-screen="sm"] .preview-shell,
+    body[data-screen="md"] .preview-shell{
+      padding:8px;
+      max-width:100%;
+    }
+
+    body[data-orientation="vertical"][data-screen="xs"] .export-card,
+    body[data-orientation="vertical"][data-screen="sm"] .export-card{
+      transform-origin: top left;
+    }
+
+    body[data-device="celular"] .badge,
+    body[data-device="tablet"] .badge{
+      white-space:normal;
+      line-height:1.35;
+    }
+
+  
+    /* ==========================================================
+       RESPONSIVE REAL
+       Ahora sí: el diseño se reorganiza, no solo se "detecta".
+       ========================================================== */
+
+    .app{
+      width:100%;
+      max-width:1300px;
+    }
+
+    .profile,
+    .main,
+    .card,
+    header{
+      min-width:0;
+    }
+
+    .top-stats,
+    .skill-summary,
+    .tools,
+    .stats-grid{
+      width:100%;
+    }
+
+    .top-stats{
+      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .skill-summary{
+      grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+    }
+
+    .tools{
+      grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+    }
+
+    .stats-grid{
+      grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+    }
+
+    .grid-2{
+      grid-template-columns:repeat(auto-fit, minmax(135px, 1fr));
+    }
+
+    .form-3{
+      grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .form-2{
+      grid-template-columns:minmax(0, 1fr) auto;
+    }
+
+    .item-card{
+      grid-template-columns:minmax(0, 1fr) auto;
+    }
+
+    .item-actions{
+      max-width:100%;
+    }
+
+    .preview-shell{
+      width:100%;
+      overflow:hidden;
+      display:block;
+    }
+
+    .export-card{
+      width:1200px;
+      height:675px;
+      max-width:none;
+      flex:0 0 auto;
+      transform-origin:top left;
+    }
+
+    /* Laptop y tablet horizontal */
+    @media (max-width: 1100px){
+      body{
+        padding:18px;
+      }
+
+      .app{
+        grid-template-columns:1fr;
+      }
+
+      .profile{
+        display:grid;
+        grid-template-columns:260px 1fr;
+        align-items:start;
+      }
+
+      .image-box{
+        height:260px;
+      }
+
+      .profile > .image-box,
+      .profile > div:nth-child(2){
+        grid-column:1;
+      }
+
+      .profile > div:not(.image-box):not(:nth-child(2)){
+        grid-column:2;
+      }
+    }
+
+    /* Tablet vertical */
+    @media (max-width: 820px){
+      body{
+        padding:14px;
+      }
+
+      header{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .profile{
+        display:flex;
+      }
+
+      .image-box{
+        height:230px;
+      }
+
+      .card{
+        padding:16px;
+        border-radius:20px;
+      }
+
+      .form-2{
+        grid-template-columns:1fr;
+      }
+
+      .item-card{
+        grid-template-columns:1fr;
+      }
+
+      .item-actions{
+        justify-content:flex-start;
+      }
+
+      .modal-content{
+        width:100%;
+      }
+    }
+
+    /* Celular */
+    @media (max-width: 600px){
+      body{
+        padding:10px;
+      }
+
+      .app{
+        gap:14px;
+      }
+
+      header{
+        padding:15px;
+        border-radius:18px;
+      }
+
+      h1{
+        font-size:1.7rem;
+      }
+
+      .subtitle{
+        font-size:.92rem;
+      }
+
+      .badge{
+        width:100%;
+        white-space:normal;
+        line-height:1.35;
+      }
+
+      .card{
+        padding:14px;
+        border-radius:18px;
+      }
+
+      .image-box{
+        height:180px;
+      }
+
+      .top-stats,
+      .skill-summary,
+      .tools,
+      .stats-grid,
+      .grid-2,
+      .form-3,
+      .form-2{
+        grid-template-columns:1fr;
+      }
+
+      .mini{
+        padding:12px;
+      }
+
+      .mini strong{
+        font-size:1.3rem;
+      }
+
+      .section-title{
+        align-items:flex-start;
+      }
+
+      .footer-actions{
+        flex-direction:column;
+      }
+
+      button,
+      .footer-actions button{
+        width:100%;
+      }
+
+      .stat-controls{
+        grid-template-columns:1fr 44px 44px;
+      }
+
+      .modal{
+        padding:8px;
+        align-items:flex-start;
+      }
+
+      .modal-content{
+        padding:14px;
+        border-radius:16px;
+        max-height:96vh;
+      }
+
+      .modal-header{
+        align-items:flex-start;
+      }
+
+      .item-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        width:100%;
+      }
+
+      .item-actions button{
+        width:100%;
+      }
+
+      .preview-shell{
+        padding:6px;
+      }
+    }
+
+    /* Celular muy pequeño */
+    @media (max-width: 390px){
+      body{
+        padding:7px;
+      }
+
+      .card{
+        padding:12px;
+      }
+
+      h1{
+        font-size:1.45rem;
+      }
+
+      .image-box{
+        height:155px;
+      }
+
+      input, textarea, select{
+        padding:10px;
+      }
+
+      .stat-controls{
+        grid-template-columns:1fr;
+      }
+    }
+
+  
+    /* ==========================================================
+       CORRECCIÓN DEL FORMULARIO DEL PERSONAJE
+       El perfil ahora se acomoda en columna limpia en todos los tamaños.
+       ========================================================== */
+
+    .profile{
+      display:flex !important;
+      flex-direction:column !important;
+      gap:16px;
+    }
+
+    .profile .grid-2{
+      grid-template-columns:1fr !important;
+      gap:14px;
+    }
+
+    .profile input,
+    .profile textarea,
+    .profile select{
+      width:100%;
+      max-width:100%;
+    }
+
+    .profile textarea#description{
+      min-height:clamp(180px, 28vh, 340px);
+      line-height:1.55;
+      padding:14px 15px;
+    }
+
+    .profile label[for="description"]{
+      font-size:.95rem;
+      color:#d8dcff;
+    }
+
+    @media (max-width: 1100px){
+      .profile{
+        width:100%;
+      }
+
+      .profile > *{
+        grid-column:auto !important;
+      }
+
+      .profile textarea#description{
+        min-height:clamp(200px, 32vh, 380px);
+      }
+    }
+
+    @media (max-width: 600px){
+      .profile{
+        gap:13px;
+      }
+
+      .profile textarea#description{
+        min-height:220px;
+      }
+    }
+
+    @media (max-width: 390px){
+      .profile textarea#description{
+        min-height:200px;
+      }
+    }
+
+  
+    /* ==========================================================
+       VISTA PREVIA INTERACTIVA Y ANIMADA
+       ========================================================== */
+
+    .preview-controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .interactive-preview{
+      isolation:isolate;
+      cursor:pointer;
+    }
+
+    .interactive-preview::before{
+      content:"";
+      position:absolute;
+      inset:-20%;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(109,230,255,.16), transparent 24%),
+        radial-gradient(circle at 80% 20%, rgba(255,79,216,.14), transparent 25%),
+        radial-gradient(circle at 50% 100%, rgba(229,183,92,.12), transparent 30%);
+      opacity:.75;
+      pointer-events:none;
+      animation:previewAura 9s ease-in-out infinite alternate;
+      z-index:0;
+    }
+
+    .interactive-preview::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(120deg, transparent 0%, rgba(255,255,255,.08) 45%, transparent 60%);
+      transform:translateX(-120%);
+      animation:previewScan 6s ease-in-out infinite;
+      pointer-events:none;
+      z-index:4;
+      mix-blend-mode:screen;
+    }
+
+    .preview-zone{
+      transition:transform .25s ease, background .25s ease, filter .25s ease;
+    }
+
+    .preview-zone:hover{
+      transform:translateY(-3px);
+      filter:brightness(1.08);
+      background-color:rgba(255,255,255,.035);
+    }
+
+    .export-token{
+      border-radius:999px;
+      padding:5px 8px;
+      transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .export-token:hover{
+      transform:scale(1.08);
+      background:rgba(255,255,255,.12);
+      box-shadow:0 0 18px rgba(109,230,255,.28);
+    }
+
+    .export-token .symbol{
+      animation:iconFloat 2.8s ease-in-out infinite;
+    }
+
+    .export-power b,
+    .export-skill-line b,
+    .level-frame strong{
+      animation:numberPulse 2.6s ease-in-out infinite;
+      text-shadow:0 0 10px rgba(229,183,92,.28);
+    }
+
+    .export-stat-row{
+      transition:transform .18s ease, background .18s ease, padding .18s ease;
+      border-radius:8px;
+      padding:2px 4px;
+    }
+
+    .export-stat-row:hover{
+      transform:translateX(6px);
+      background:rgba(48,227,208,.10);
+    }
+
+    .export-ability{
+      transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .export-ability:hover{
+      transform:translateX(-5px) scale(1.01);
+      background:rgba(0,0,0,.26);
+      box-shadow:0 0 18px rgba(255,255,255,.10);
+    }
+
+    .export-character-img{
+      animation:characterFloat 4.5s ease-in-out infinite;
+    }
+
+    .export-nameplate{
+      transition:transform .25s ease, box-shadow .25s ease;
+    }
+
+    .export-nameplate:hover{
+      transform:translateY(-4px);
+      box-shadow:0 0 26px rgba(109,230,255,.18);
+    }
+
+    .level-frame{
+      transition:transform .25s ease, box-shadow .25s ease;
+    }
+
+    .level-frame:hover{
+      transform:scale(1.04);
+      box-shadow:0 0 28px rgba(229,183,92,.16);
+    }
+
+    .preview-clickable.preview-selected{
+      outline:2px solid rgba(109,230,255,.7);
+      box-shadow:0 0 24px rgba(109,230,255,.25);
+    }
+
+    .interactive-preview.preview-pulse{
+      animation:cardPulse .55s ease-out;
+    }
+
+    .interactive-preview.preview-zoomed{
+      filter:contrast(1.05) saturate(1.12);
+    }
+
+    .interactive-preview.preview-glow .export-character-img{
+      filter:
+        drop-shadow(0 18px 16px rgba(0,0,0,.45))
+        drop-shadow(0 0 22px rgba(109,230,255,.45));
+    }
+
+    .interactive-preview.preview-glow .export-top{
+      box-shadow:0 0 22px rgba(109,230,255,.18);
+    }
+
+    .interactive-preview.preview-glow .export-nameplate{
+      box-shadow:0 0 26px rgba(255,79,216,.18);
+    }
+
+    .interactive-preview.animations-paused,
+    .interactive-preview.animations-paused *,
+    .interactive-preview.animations-paused::before,
+    .interactive-preview.animations-paused::after{
+      animation-play-state:paused !important;
+    }
+
+    .preview-theme-dark{
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.14), transparent 45%, rgba(0,0,0,.14)),
+        linear-gradient(180deg, #394651, #252f3a);
+    }
+
+    .preview-theme-violet{
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,79,216,.18), transparent 35%),
+        linear-gradient(180deg, #3b3154, #1f223b);
+    }
+
+    .preview-theme-blue{
+      background:
+        radial-gradient(circle at 50% 20%, rgba(109,230,255,.18), transparent 35%),
+        linear-gradient(180deg, #2f4a5b, #1d2b3b);
+    }
+
+    .preview-theme-gold{
+      background:
+        radial-gradient(circle at 50% 20%, rgba(229,183,92,.20), transparent 35%),
+        linear-gradient(180deg, #4d4130, #242b35);
+    }
+
+    @keyframes previewAura{
+      0%{ transform:translate3d(-2%, -1%, 0) scale(1); opacity:.45; }
+      100%{ transform:translate3d(2%, 1%, 0) scale(1.05); opacity:.9; }
+    }
+
+    @keyframes previewScan{
+      0%, 55%{ transform:translateX(-130%); opacity:0; }
+      65%{ opacity:.45; }
+      100%{ transform:translateX(130%); opacity:0; }
+    }
+
+    @keyframes characterFloat{
+      0%, 100%{ transform:translateY(0); }
+      50%{ transform:translateY(-10px); }
+    }
+
+    @keyframes iconFloat{
+      0%, 100%{ transform:translateY(0) rotate(0deg); }
+      50%{ transform:translateY(-2px) rotate(-3deg); }
+    }
+
+    @keyframes numberPulse{
+      0%, 100%{ filter:brightness(1); }
+      50%{ filter:brightness(1.25); }
+    }
+
+    @keyframes cardPulse{
+      0%{ box-shadow:0 0 0 rgba(109,230,255,0); }
+      45%{ box-shadow:0 0 45px rgba(109,230,255,.32); }
+      100%{ box-shadow:0 0 0 rgba(109,230,255,0); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .interactive-preview,
+      .interactive-preview *,
+      .interactive-preview::before,
+      .interactive-preview::after{
+        animation:none !important;
+        transition:none !important;
+      }
+    }
+
+    @media (max-width: 600px){
+      .preview-controls{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+    }
+
+  
+    /* ==========================================================
+       MARCO LLAMATIVO DEL PERSONAJE EN VISTA PREVIA
+       ========================================================== */
+
+    .export-center{
+      justify-content:center;
+      padding-bottom:110px;
+      position:relative;
+    }
+
+    .character-frame{
+      width:330px;
+      height:505px;
+      border-radius:34px;
+      padding:5px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        linear-gradient(135deg,
+          rgba(255,255,255,.85),
+          rgba(109,230,255,.75),
+          rgba(255,79,216,.65),
+          rgba(229,183,92,.85)
+        );
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.20),
+        0 0 28px rgba(109,230,255,.20),
+        0 22px 35px rgba(0,0,0,.40);
+      overflow:hidden;
+      z-index:2;
+      transition:
+        transform .28s ease,
+        box-shadow .28s ease,
+        filter .28s ease;
+    }
+
+    .character-frame::before{
+      content:"";
+      position:absolute;
+      inset:-45%;
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(109,230,255,.0),
+          rgba(109,230,255,.70),
+          rgba(255,79,216,.68),
+          rgba(229,183,92,.70),
+          rgba(109,230,255,.0)
+        );
+      animation:frameRotate 7s linear infinite;
+      opacity:.62;
+      z-index:0;
+    }
+
+    .character-frame::after{
+      content:"";
+      position:absolute;
+      inset:10px;
+      border-radius:27px;
+      border:1px solid rgba(255,255,255,.20);
+      box-shadow:inset 0 0 24px rgba(255,255,255,.08);
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .character-frame:hover{
+      transform:translateY(-5px) scale(1.015);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.28),
+        0 0 42px rgba(109,230,255,.34),
+        0 26px 42px rgba(0,0,0,.46);
+      filter:brightness(1.08);
+    }
+
+    .character-frame-inner{
+      position:relative;
+      z-index:1;
+      width:100%;
+      height:100%;
+      border-radius:30px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,.13), transparent 36%),
+        radial-gradient(circle at 50% 70%, rgba(109,230,255,.10), transparent 46%),
+        linear-gradient(180deg, rgba(16,22,31,.92), rgba(31,40,52,.82));
+      overflow:hidden;
+    }
+
+    .character-frame-inner::before{
+      content:"";
+      position:absolute;
+      width:210px;
+      height:210px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(109,230,255,.18), transparent 68%);
+      filter:blur(2px);
+      top:58px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:0;
+      animation:frameGlow 4s ease-in-out infinite alternate;
+    }
+
+    .character-frame-inner::after{
+      content:"";
+      position:absolute;
+      left:18%;
+      right:18%;
+      bottom:34px;
+      height:28px;
+      border-radius:50%;
+      background:rgba(0,0,0,.34);
+      filter:blur(10px);
+      z-index:0;
+      animation:shadowPulse 4.5s ease-in-out infinite;
+    }
+
+    .export-character-img{
+      position:relative;
+      z-index:2;
+      max-width:92%;
+      max-height:94%;
+      object-fit:contain;
+      object-position:center center;
+      margin:auto;
+      transform-origin:center bottom;
+    }
+
+    .export-character-placeholder{
+      position:relative;
+      z-index:2;
+      width:78%;
+      height:62%;
+      border-radius:22px;
+      margin:auto;
+    }
+
+    .preview-glow .character-frame{
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.28),
+        0 0 44px rgba(109,230,255,.38),
+        0 0 70px rgba(255,79,216,.18),
+        0 26px 42px rgba(0,0,0,.46);
+    }
+
+    .preview-theme-violet .character-frame{
+      background:linear-gradient(135deg, rgba(255,255,255,.8), rgba(255,79,216,.78), rgba(141,92,255,.75), rgba(109,230,255,.65));
+    }
+
+    .preview-theme-blue .character-frame{
+      background:linear-gradient(135deg, rgba(255,255,255,.8), rgba(109,230,255,.82), rgba(78,148,255,.68), rgba(229,183,92,.55));
+    }
+
+    .preview-theme-gold .character-frame{
+      background:linear-gradient(135deg, rgba(255,255,255,.84), rgba(229,183,92,.86), rgba(255,209,102,.72), rgba(109,230,255,.55));
+    }
+
+    @keyframes frameRotate{
+      0%{ transform:rotate(0deg); }
+      100%{ transform:rotate(360deg); }
+    }
+
+    @keyframes frameGlow{
+      0%{ opacity:.45; transform:translateX(-50%) scale(.96); }
+      100%{ opacity:.88; transform:translateX(-50%) scale(1.08); }
+    }
+
+    @keyframes shadowPulse{
+      0%, 100%{ opacity:.55; transform:scaleX(.92); }
+      50%{ opacity:.82; transform:scaleX(1.08); }
+    }
+
+    @media (max-width: 600px){
+      .character-frame{
+        width:300px;
+        height:460px;
+      }
+
+      .export-center{
+        padding-bottom:102px;
+      }
+    }
+
+  
+    /* ==========================================================
+       ZOOM DEL PERSONAJE Y HABILIDADES EXTRA EN VISTA PREVIA
+       ========================================================== */
+
+    .character-frame:hover .export-character-img,
+    .character-frame.preview-selected .export-character-img,
+    .character-frame:active .export-character-img{
+      animation-play-state:paused !important;
+      transform:scale(1.65) translateY(-18px) !important;
+      filter:
+        drop-shadow(0 20px 18px rgba(0,0,0,.50))
+        drop-shadow(0 0 26px rgba(109,230,255,.38));
+    }
+
+    .character-frame:hover .character-frame-inner::before,
+    .character-frame.preview-selected .character-frame-inner::before,
+    .character-frame:active .character-frame-inner::before{
+      opacity:.95;
+      transform:translateX(-50%) scale(1.22);
+    }
+
+    .preview-more-skills{
+      margin-top:10px;
+      width:100%;
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:12px;
+      background:rgba(109,230,255,.13);
+      border:1px solid rgba(109,230,255,.35);
+      color:#dffaff;
+      box-shadow:none;
+      cursor:pointer;
+      transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .preview-more-skills:hover{
+      transform:translateY(-2px);
+      background:rgba(109,230,255,.20);
+      box-shadow:0 0 18px rgba(109,230,255,.16);
+    }
+
+    .main-skill-tag{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:3px 8px;
+      margin-left:6px;
+      font-size:.72rem;
+      background:rgba(255,209,102,.16);
+      color:#ffe6a6;
+      border:1px solid rgba(255,209,102,.35);
+    }
+
+    .main-skill-box{
+      margin:10px 0 14px;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,209,102,.08);
+      border:1px solid rgba(255,209,102,.22);
+      color:var(--muted);
+      line-height:1.45;
+      font-size:.9rem;
+    }
+
+    .preview-skills-modal-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .preview-skill-full-card{
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .preview-skill-full-card strong{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      color:#fff;
+      margin-bottom:6px;
+    }
+
+    .preview-skill-full-card small{
+      display:block;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:4px;
+    }
+
+  
+    /* ==========================================================
+       ZOOM FUERTE + OSCURECIMIENTO TRANSPARENTE ALREDEDOR
+       ========================================================== */
+
+    .character-frame{
+      overflow:hidden;
+    }
+
+    .character-frame .export-character-img{
+      transition:
+        transform .38s cubic-bezier(.2,.9,.2,1),
+        filter .38s ease;
+    }
+
+    .character-frame:hover .export-character-img,
+    .character-frame.preview-selected .export-character-img,
+    .character-frame:active .export-character-img{
+      transform:scale(1.65) translateY(-18px) !important;
+      filter:
+        drop-shadow(0 24px 22px rgba(0,0,0,.62))
+        drop-shadow(0 0 34px rgba(109,230,255,.46)) !important;
+    }
+
+    .character-frame:hover .character-frame-inner,
+    .character-frame.preview-selected .character-frame-inner,
+    .character-frame:active .character-frame-inner{
+      background:
+        radial-gradient(ellipse at center, rgba(255,255,255,.10) 0%, rgba(255,255,255,.06) 23%, rgba(0,0,0,.46) 62%, rgba(0,0,0,.72) 100%),
+        linear-gradient(180deg, rgba(10,14,22,.96), rgba(16,22,31,.92));
+    }
+
+    .character-frame:hover .character-frame-inner::before,
+    .character-frame.preview-selected .character-frame-inner::before,
+    .character-frame:active .character-frame-inner::before{
+      width:100%;
+      height:100%;
+      inset:0;
+      left:0;
+      top:0;
+      border-radius:30px;
+      transform:none !important;
+      background:
+        radial-gradient(ellipse at center,
+          rgba(0,0,0,0) 0%,
+          rgba(0,0,0,0) 31%,
+          rgba(0,0,0,.48) 66%,
+          rgba(0,0,0,.82) 100%
+        );
+      opacity:1;
+      z-index:1;
+      animation:none;
+      pointer-events:none;
+    }
+
+    .character-frame:hover .character-frame-inner::after,
+    .character-frame.preview-selected .character-frame-inner::after,
+    .character-frame:active .character-frame-inner::after{
+      opacity:.95;
+      background:rgba(0,0,0,.55);
+    }
+
+    .character-frame:hover,
+    .character-frame.preview-selected,
+    .character-frame:active{
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.34),
+        0 0 52px rgba(109,230,255,.42),
+        0 0 76px rgba(255,79,216,.20),
+        0 30px 48px rgba(0,0,0,.62);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Personajes de Rol</h1>
+        <div class="subtitle">Edita el personaje y revisa cómo quedará al exportarse.</div>
+      </div>
+      
+    </header>
+
+    <aside class="card profile">
+      <div class="image-box">
+        <img id="characterImage" alt="Imagen del personaje">
+        <div class="image-placeholder" id="imagePlaceholder">
+          <strong>Imagen del personaje</strong>
+        </div>
+      </div>
+
+      <div>
+        <label for="imageUpload">Agregar imagen</label>
+        <input id="imageUpload" type="file" accept="image/*">
+      </div>
+
+      <div>
+        <label for="name">Nombre</label>
+        <input id="name" type="text" placeholder="Ej. Akira Noctis">
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label for="age">Edad</label>
+          <input id="age" type="number" min="0" placeholder="Ej. 18">
+        </div>
+        <div>
+          <label for="fandom">Fandom</label>
+          <input id="fandom" type="text" placeholder="Ej. Anime original">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label for="classType">Clase</label>
+          <input id="classType" type="text" placeholder="Ej. Espadachín">
+        </div>
+        <div>
+          <label for="element">Elemento</label>
+          <input id="element" type="text" placeholder="Ej. Sombra">
+        </div>
+      </div>
+
+      <div>
+        <label for="description">Descripción del personaje</label>
+        <textarea id="description" placeholder="Escribe aquí la historia, personalidad, origen, reglas especiales o detalles importantes del personaje."></textarea>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="card">
+        <div class="top-stats">
+          <div class="mini">
+            <span>Nivel</span>
+            <strong id="levelDisplay">1</strong>
+          </div>
+          <div class="mini">
+            <span>Experiencia</span>
+            <strong id="xpDisplay">0</strong>
+            <div class="progress"><div class="bar" id="xpBar"></div></div>
+          </div>
+          <div class="mini">
+            <span>Poder total</span>
+            <strong id="powerDisplay">0</strong>
+          </div>
+          <div class="mini">
+            <span>Elementos</span>
+            <strong id="systemElementCountTop">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Elementos del sistema</h2>
+          <span class="pill">Parte superior de la vista previa</span>
+        </div>
+
+        <div class="skill-summary">
+          <div class="mini">
+            <span>Elementos agregados</span>
+            <strong id="systemElementCountPanel">0</strong>
+          </div>
+          <div class="mini">
+            <span>Primer elemento</span>
+            <strong id="firstSystemElementPanel">-</strong>
+          </div>
+          <div class="mini">
+            <span>Valor total</span>
+            <strong id="systemElementTotalPanel">0</strong>
+          </div>
+        </div>
+
+        <div class="footer-actions" style="margin-top:14px;">
+          <button onclick="openSystemElementModal()">Abrir elementos del sistema</button>
+        </div>
+
+        <div class="notice">
+          Estos elementos aparecen arriba en la vista previa y en la exportación. Puedes agregar revividas, muertes, sellos, núcleos, energía o cualquier contador propio.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Reglas del sistema</h2>
+          <span class="pill">Creadas por el usuario</span>
+        </div>
+
+        <div class="skill-summary">
+          <div class="mini">
+            <span>Reglas activas</span>
+            <strong id="systemRuleCountPanel">0</strong>
+          </div>
+          <div class="mini">
+            <span>Bonus estadísticas</span>
+            <strong id="systemRuleStatsBonusPanel">0%</strong>
+          </div>
+          <div class="mini">
+            <span>Bonus habilidades</span>
+            <strong id="systemRuleAbilityBonusPanel">0%</strong>
+          </div>
+        </div>
+
+        <div class="footer-actions" style="margin-top:14px;">
+          <button onclick="openSystemRuleModal()">Reglas del sistema</button>
+        </div>
+
+        <div class="notice">
+          Las reglas usan los elementos del sistema. Por ejemplo: por cada 3 puntos en un contador, aumentar 20% todas las estadísticas, una estadística específica o el poder de habilidades.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Estadísticas</h2>
+          <span class="pill">Editable</span>
+        </div>
+        <div class="stats-grid" id="statsContainer"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Herramientas de aumento automático</h2>
+          <span class="pill">Subir poder sin entrenamiento real</span>
+        </div>
+
+        <div class="tools">
+          <button class="good" onclick="trainAll()">Entrenar todo +5</button>
+          <button class="warn" onclick="levelUp()">Subir nivel</button>
+          <button class="secondary" onclick="boostThirtyPercent()">Incrementar 30%</button>
+          <button class="secondary" onclick="randomBoost()">Aumento aleatorio</button>
+          <button class="secondary" onclick="addXP(100)">+100 XP</button>
+          <button class="danger" onclick="resetCharacter()">Reiniciar</button>
+        </div>
+
+        <div class="notice">
+          El botón de 30% aumenta estadísticas base y poderes de habilidades.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Habilidades</h2>
+          <span class="pill">Ventana emergente</span>
+        </div>
+
+        <div class="skill-summary">
+          <div class="mini">
+            <span>Total de habilidades</span>
+            <strong id="abilityCountPanel">0</strong>
+          </div>
+          <div class="mini">
+            <span>Poder de habilidades</span>
+            <strong id="abilityPowerPanel">0</strong>
+          </div>
+          <div class="mini">
+            <span>Mayor habilidad</span>
+            <strong id="strongestAbilityPanel">-</strong>
+          </div>
+        </div>
+
+        <div class="footer-actions" style="margin-top:14px;">
+          <button onclick="openAbilityModal()">Habilidades</button>
+        </div>
+
+        <div class="notice">
+          Las habilidades no aparecen como lista en la página principal para mantener el editor limpio.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Exportar personaje</h2>
+          <span class="pill">Imagen / PDF / JSON</span>
+        </div>
+
+        <div class="footer-actions">
+          <button class="good" onclick="saveData()">Guardar</button>
+          <button class="secondary" onclick="exportImage()">Exportar imagen PNG</button>
+          <button class="secondary" onclick="exportPDF()">Exportar PDF</button>
+          <button class="secondary" onclick="exportData()">Exportar JSON</button>
+          <button class="secondary" onclick="document.getElementById('importFile').click()">Importar JSON</button>
+          <input class="hidden" id="importFile" type="file" accept="application/json" onchange="importData(event)">
+        </div>
+
+        <div class="notice">
+          La imagen y el PDF se generan desde la vista previa de abajo.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Vista previa de exportación</h2>
+          <span class="pill">Así se verá el archivo final</span>
+        </div>
+
+        <div class="preview-controls">
+          <button class="secondary" onclick="togglePreviewAnimation()">Pausar / activar animación</button>
+          <button class="secondary" onclick="changePreviewTheme()">Cambiar tema</button>
+          <button class="secondary" onclick="togglePreviewGlow()">Brillo</button>
+          <button class="secondary" onclick="togglePreviewZoom()">Zoom</button>
+        </div>
+
+        <div class="notice">
+          Puedes pasar el cursor o tocar los elementos de la vista previa para resaltarlos. En celular se activa con toque, porque el mouse no se invoca por ritual.
+        </div>
+
+        <div class="preview-shell">
+          <div id="exportCard" class="export-card interactive-preview preview-theme-dark" onclick="pulsePreview()">
+            <div class="export-top" id="previewTopCounters"></div>
+
+            <div class="export-tabs">
+              <span>Growth</span>
+              <span>Sistema</span>
+              <span>Estado</span>
+            </div>
+
+            <div class="export-col export-left preview-zone">
+              <div class="export-title" id="previewFandomTitle">Fandom: Anime original</div>
+              <div class="export-power-row">
+                <div class="export-power">
+                  <span>Combat Power</span>
+                  <b id="previewCombatPower">0</b>
+                </div>
+                <div class="export-power">
+                  <span>Defensa</span>
+                  <b id="previewDefensePower">0</b>
+                </div>
+                <div class="export-power">
+                  <span>Core</span>
+                  <b id="previewCorePower">0</b>
+                </div>
+              </div>
+
+              <div class="export-title">Estadísticas</div>
+              <div class="export-stat-list" id="previewStatsList"></div>
+            </div>
+
+            <div class="export-col export-center preview-zone">
+              <div class="character-frame preview-clickable" title="Marco del personaje">
+                <div class="character-frame-inner">
+                  <img id="previewCharacterImage" class="export-character-img" alt="Personaje exportado">
+              <div id="previewPlaceholder" class="export-character-placeholder">
+                Imagen del personaje
+              </div>
+
+                              </div>
+              </div>
+
+              <div class="export-nameplate preview-clickable" title="Datos principales">
+                <strong id="previewName">Akira Noctis</strong>
+                <span id="previewGeneralInfo">Edad 18 | Guardián Astral | Sombra</span>
+                <span id="previewDescription">Descripción breve del personaje.</span>
+              </div>
+            </div>
+
+            <div class="export-col export-right preview-zone">
+              <div class="level-frame preview-clickable" title="Nivel del personaje">
+                <span>Level</span>
+                <strong id="previewLevel">1</strong>
+              </div>
+
+              <div class="export-right-grid">
+                <div class="export-skill-line"><span>ATK</span><b id="previewAtkRight">0</b></div>
+                <div class="export-skill-line"><span>Magia</span><b id="previewMagicRight">0</b></div>
+                <div class="export-skill-line"><span>Velocidad</span><b id="previewSpeedRight">0</b></div>
+                <div class="export-skill-line"><span>Defensa</span><b id="previewDefRight">0</b></div>
+              </div>
+
+              <div class="export-title">Habilidades</div>
+              <div id="previewAbilities" class="export-abilities"></div>
+              <button id="previewMoreSkillsButton" class="preview-more-skills hidden" onclick="openPreviewSkillsModal(event)">Ver todas las habilidades</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="previewSkillsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Habilidades del personaje</h2>
+        <button class="danger" onclick="closePreviewSkillsModal()">Cerrar</button>
+      </div>
+
+      <div class="notice">
+        Aquí aparecen todas las habilidades. En la vista previa principal solo se muestran las habilidades principales que caben en el espacio disponible.
+      </div>
+
+      <div class="preview-skills-modal-list" id="previewSkillsFullList" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="systemElementModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Elementos del sistema</h2>
+        <button class="danger" onclick="closeSystemElementModal()">Cerrar</button>
+      </div>
+
+      <div class="form-3">
+        <input id="systemElementName" type="text" placeholder="Nombre. Ej. Veces revivido">
+        <select id="systemElementIcon">
+          <option value="↺">↺ Revivir</option>
+          <option value="☠">☠ Muertes</option>
+          <option value="🧿">🧿 Protección</option>
+          <option value="⚔">⚔ Combate</option>
+          <option value="🛡">🛡 Defensa</option>
+          <option value="🔥">🔥 Fuego</option>
+          <option value="❄">❄ Hielo</option>
+          <option value="⚡">⚡ Energía</option>
+          <option value="🌑">🌑 Sombra</option>
+          <option value="🌕">🌕 Luz</option>
+          <option value="🩸">🩸 Sangre</option>
+          <option value="👁">👁 Visión</option>
+          <option value="⛓">⛓ Sello</option>
+          <option value="✦">✦ Especial</option>
+          <option value="◆">◆ Núcleo</option>
+        </select>
+        <input id="systemElementValue" type="number" step="1" value="0" placeholder="Valor">
+      </div>
+
+      <div class="form-2">
+        <input id="systemElementDescription" type="text" placeholder="Descripción opcional">
+        <button class="good" id="systemElementSaveButton" onclick="saveSystemElement()">Agregar elemento</button>
+      </div>
+
+      <div class="notice">
+        Cada elemento tendrá su propio ícono y valor. Aparecerá en la parte superior de la vista previa y en la exportación.
+      </div>
+
+      <div class="items-list" id="systemElementsContainer" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="systemRuleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Reglas del sistema</h2>
+        <button class="danger" onclick="closeSystemRuleModal()">Cerrar</button>
+      </div>
+
+      <div class="form-3">
+        <input id="systemRuleName" type="text" placeholder="Nombre de la regla. Ej. Renacer fortalecido">
+        <select id="systemRuleElement"></select>
+        <select id="systemRuleMode">
+          <option value="cada">Por cada cantidad</option>
+          <option value="minimo">Al alcanzar mínimo</option>
+        </select>
+      </div>
+
+      <div class="form-3">
+        <input id="systemRuleThreshold" type="number" min="1" value="1" placeholder="Cantidad necesaria">
+        <input id="systemRulePercent" type="number" step="1" value="20" placeholder="% de aumento">
+        <select id="systemRuleTarget" onchange="toggleRuleStatTarget()">
+          <option value="allStats">Todas las estadísticas</option>
+          <option value="specificStat">Una estadística específica</option>
+          <option value="abilities">Poder de habilidades</option>
+        </select>
+      </div>
+
+      <div class="form-2">
+        <select id="systemRuleStatTarget">
+          <option value="atk">ATK</option>
+          <option value="vida">Vida</option>
+          <option value="defensa">Defensa</option>
+          <option value="magia">Magia</option>
+          <option value="velocidad">Velocidad</option>
+          <option value="resistencia">Resistencia</option>
+          <option value="inteligencia">Inteligencia</option>
+        </select>
+        <button class="good" id="systemRuleSaveButton" onclick="saveSystemRule()">Agregar regla</button>
+      </div>
+
+      <div class="notice">
+        Las reglas no cambian tus números base: calculan valores finales para la vista previa y exportación. Así puedes probar sistemas sin destruir la ficha, una decisión sorprendentemente sensata.
+      </div>
+
+      <div class="items-list" id="systemRulesContainer" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="abilityModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ventana de habilidades</h2>
+        <button class="danger" onclick="closeAbilityModal()">Cerrar</button>
+      </div>
+
+      <div class="form-3">
+        <input id="abilityName" type="text" placeholder="Nombre de habilidad">
+        <input id="abilityType" type="text" placeholder="Tipo: ataque, defensa, soporte...">
+        <input id="abilityPower" type="number" min="1" value="10" placeholder="Poder">
+      </div>
+
+      <div class="main-skill-box">
+        <label style="display:flex; align-items:center; gap:10px; margin:0;">
+          <input id="abilityMain" type="checkbox" style="width:auto;">
+          Marcar como habilidad principal para la vista previa
+        </label>
+        <div id="mainSkillLimitText" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="form-2">
+        <textarea id="abilityDescription" placeholder="Descripción. Usa {power} para insertar el poder numérico. Ej. Inflige {power} de daño oscuro."></textarea>
+        <button class="good" onclick="addAbility()">Agregar habilidad</button>
+      </div>
+
+      <div class="notice">
+        En esta ventana puedes subir o bajar el poder de cada habilidad, aplicar +30%, subir nivel o eliminarla.
+      </div>
+
+      <div class="items-list" id="abilitiesContainer" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const defaultData = {
+      name: "Akira Noctis",
+      age: 18,
+      fandom: "Anime original",
+      classType: "Guardián Astral",
+      element: "Sombra",
+      description: "Un personaje con energía de protagonista que claramente debería descansar, pero el guion no lo permite.",
+      image: "",
+      level: 1,
+      xp: 0,
+      stats: {
+        atk: 3069,
+        vida: 100,
+        defensa: 5567,
+        magia: 569,
+        velocidad: 20,
+        resistencia: 22,
+        inteligencia: 28
+      },
+      systemElements: [
+        { id: "el_revivir", name: "Veces revivido", icon: "↺", value: 0, description: "Cantidad de veces que el personaje ha vuelto." },
+        { id: "el_proteccion", name: "Protección", icon: "🧿", value: 0, description: "Elemento defensivo o repelente." },
+        { id: "el_muertes", name: "Seres asesinados", icon: "☠", value: 0, description: "Contador general de asesinatos." }
+      ],
+      systemRules: [
+        { id: "rule_revivir", name: "Fortaleza por renacer", elementId: "el_revivir", mode: "cada", threshold: 1, percent: 10, target: "allStats", statKey: "atk", active: true }
+      ],
+      previewSkillLimit: 5,
+      abilities: [
+        {
+          name: "Corte Lunar",
+          type: "Ataque",
+          power: 35,
+          level: 1,
+          main: true,
+          description: "Inflige {power} de daño físico con una media luna de energía."
+        },
+        {
+          name: "Sombra Protectora",
+          type: "Defensa",
+          power: 25,
+          level: 1,
+          main: true,
+          description: "Genera un escudo que absorbe hasta {power} puntos de daño."
+        }
+      ]
+    };
+
+    let data = JSON.parse(JSON.stringify(defaultData));
+    let editingSystemElementIndex = null;
+    let editingSystemRuleIndex = null;
+
+    const statNames = {
+      atk: "ATK",
+      vida: "Vida",
+      defensa: "Defensa",
+      magia: "Magia",
+      velocidad: "Velocidad",
+      resistencia: "Resistencia",
+      inteligencia: "Inteligencia"
+    };
+
+    function cleanStats(sourceStats){
+      const clean = {};
+      Object.keys(defaultData.stats).forEach(key => {
+        clean[key] = Number(sourceStats[key] ?? defaultData.stats[key] ?? 0);
+      });
+      return clean;
+    }
+
+    function createId(prefix){
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function ensureDataIntegrity(){
+      if(!Array.isArray(data.systemElements)) data.systemElements = JSON.parse(JSON.stringify(defaultData.systemElements));
+      if(!Array.isArray(data.systemRules)) data.systemRules = [];
+      if(!Array.isArray(data.abilities)) data.abilities = [];
+      if(!data.previewSkillLimit) data.previewSkillLimit = 5;
+
+      data.systemElements.forEach((item, index) => {
+        if(!item.id) item.id = createId(`el${index}`);
+        item.value = Number(item.value || 0);
+      });
+
+      data.systemRules.forEach((rule, index) => {
+        if(!rule.id) rule.id = createId(`rule${index}`);
+        if(rule.active === undefined) rule.active = true;
+        rule.threshold = Math.max(1, Number(rule.threshold || 1));
+        rule.percent = Number(rule.percent || 0);
+      });
+
+      data.abilities.forEach(ability => {
+        if(ability.main === undefined) ability.main = false;
+      });
+
+      const limit = getPreviewSkillLimit();
+      let mainCount = 0;
+      data.abilities.forEach(ability => {
+        if(ability.main){
+          mainCount += 1;
+          if(mainCount > limit) ability.main = false;
+        }
+      });
+    }
+
+    function getSystemElementById(id){
+      return data.systemElements.find(item => item.id === id);
+    }
+
+    function getSystemElementNumericValue(id){
+      const item = getSystemElementById(id);
+      return item ? Number(item.value || 0) : 0;
+    }
+
+    function getRuleActivationCount(rule){
+      const value = getSystemElementNumericValue(rule.elementId);
+      const threshold = Math.max(1, Number(rule.threshold || 1));
+
+      if(rule.mode === "minimo"){
+        return value >= threshold ? 1 : 0;
+      }
+
+      return Math.floor(value / threshold);
+    }
+
+    function getRuleInfo(){
+      const statsPercent = {};
+      Object.keys(defaultData.stats).forEach(key => statsPercent[key] = 0);
+
+      let allStatsPercent = 0;
+      let abilitiesPercent = 0;
+      let activeRules = 0;
+
+      data.systemRules.forEach(rule => {
+        if(!rule.active) return;
+
+        const activations = getRuleActivationCount(rule);
+        if(activations <= 0) return;
+
+        activeRules += 1;
+        const bonus = activations * Number(rule.percent || 0);
+
+        if(rule.target === "allStats"){
+          allStatsPercent += bonus;
+        }else if(rule.target === "specificStat"){
+          const statKey = rule.statKey || "atk";
+          statsPercent[statKey] = (statsPercent[statKey] || 0) + bonus;
+        }else if(rule.target === "abilities"){
+          abilitiesPercent += bonus;
+        }
+      });
+
+      return { statsPercent, allStatsPercent, abilitiesPercent, activeRules };
+    }
+
+    function finalStatValue(key){
+      const info = getRuleInfo();
+      const base = Number(data.stats[key] || 0);
+      const percent = info.allStatsPercent + (info.statsPercent[key] || 0);
+      return Math.round(base * (1 + percent / 100) * 100) / 100;
+    }
+
+    function getFinalStats(){
+      const finalStats = {};
+      Object.keys(defaultData.stats).forEach(key => {
+        finalStats[key] = finalStatValue(key);
+      });
+      return finalStats;
+    }
+
+    function getTotalStatsBonusPercent(){
+      const info = getRuleInfo();
+      const specificTotal = Object.values(info.statsPercent).reduce((sum, value) => sum + Number(value || 0), 0);
+      return info.allStatsPercent + specificTotal;
+    }
+
+
+    function xpNeeded(){
+      return data.level * 100;
+    }
+
+    function clampNumber(value, min = 0, max = 9999999){
+      const num = Number(value);
+      if(Number.isNaN(num)) return min;
+      return Math.max(min, Math.min(max, num));
+    }
+
+    function formatNumber(value){
+      const num = Number(value || 0);
+      return num.toLocaleString("es-MX", { maximumFractionDigits: 2 });
+    }
+
+    function shortText(text, max){
+      const clean = String(text || "").trim();
+      if(clean.length <= max) return clean;
+      return clean.slice(0, max - 3) + "...";
+    }
+
+    function getAbilityText(ability){
+      const raw = ability.description || "Poder de habilidad: {power}.";
+      return raw.replaceAll("{power}", formatNumber(ability.power));
+    }
+
+    function getPreviewSkillLimit(){
+      return Number(data.previewSkillLimit || 5);
+    }
+
+    function getMainAbilities(){
+      const limit = getPreviewSkillLimit();
+      const mains = data.abilities.filter(ability => ability.main);
+      const fallback = data.abilities.filter(ability => !ability.main);
+
+      return [...mains, ...fallback].slice(0, limit);
+    }
+
+    function getHiddenPreviewAbilities(){
+      const visible = new Set(getMainAbilities());
+      return data.abilities.filter(ability => !visible.has(ability));
+    }
+
+    function countMainAbilities(){
+      return data.abilities.filter(ability => ability.main).length;
+    }
+
+    function updateMainSkillLimitText(){
+      const target = document.getElementById("mainSkillLimitText");
+      const checkbox = document.getElementById("abilityMain");
+      if(!target || !checkbox) return;
+
+      const limit = getPreviewSkillLimit();
+      const current = countMainAbilities();
+
+      target.textContent = `Habilidades principales: ${current}/${limit}. Solo esas aparecen primero en la vista previa.`;
+      checkbox.disabled = current >= limit && !checkbox.checked;
+    }
+
+
+    function getTotals(){
+      const finalStats = getFinalStats();
+      const ruleInfo = getRuleInfo();
+      const rawAbilityPower = data.abilities.reduce((sum, ability) => sum + Number(ability.power || 0), 0);
+      const abilityPower = Math.round(rawAbilityPower * (1 + ruleInfo.abilitiesPercent / 100) * 100) / 100;
+      const attackPower = Number(finalStats.atk || 0);
+      const defensePower = Number(finalStats.defensa || 0) + Number(finalStats.resistencia || 0) + Number(finalStats.vida || 0);
+      const corePower = Number(finalStats.magia || 0) + Number(finalStats.inteligencia || 0);
+      const combatPower = attackPower + defensePower + corePower + abilityPower;
+      return { abilityPower, attackPower, defensePower, corePower, combatPower, finalStats, ruleInfo };
+    }
+
+    function bindInputs(){
+      document.getElementById("name").value = data.name;
+      document.getElementById("age").value = data.age;
+      document.getElementById("fandom").value = data.fandom;
+      document.getElementById("classType").value = data.classType;
+      document.getElementById("element").value = data.element;
+      document.getElementById("description").value = data.description;
+
+      document.getElementById("name").oninput = e => { data.name = e.target.value; sync(); };
+      document.getElementById("age").oninput = e => { data.age = clampNumber(e.target.value, 0, 9999); sync(); };
+      document.getElementById("fandom").oninput = e => { data.fandom = e.target.value; sync(); };
+      document.getElementById("classType").oninput = e => { data.classType = e.target.value; sync(); };
+      document.getElementById("element").oninput = e => { data.element = e.target.value; sync(); };
+      document.getElementById("description").oninput = e => { data.description = e.target.value; sync(); };
+    }
+
+    function renderImage(){
+      const img = document.getElementById("characterImage");
+      const placeholder = document.getElementById("imagePlaceholder");
+      const previewImg = document.getElementById("previewCharacterImage");
+      const previewPlaceholder = document.getElementById("previewPlaceholder");
+
+      if(data.image){
+        img.src = data.image;
+        img.style.display = "block";
+        placeholder.style.display = "none";
+
+        previewImg.src = data.image;
+        previewImg.style.display = "block";
+        previewPlaceholder.style.display = "none";
+      }else{
+        img.removeAttribute("src");
+        img.style.display = "none";
+        placeholder.style.display = "block";
+
+        previewImg.removeAttribute("src");
+        previewImg.style.display = "none";
+        previewPlaceholder.style.display = "flex";
+      }
+    }
+
+    function renderStats(){
+      const container = document.getElementById("statsContainer");
+      container.innerHTML = "";
+
+      Object.entries(data.stats).forEach(([key, value]) => {
+        const stat = document.createElement("div");
+        stat.className = "stat";
+
+        const percent = Math.min(100, Number(value || 0));
+        const finalValue = finalStatValue(key);
+        const ruleInfo = getRuleInfo();
+        const appliedPercent = ruleInfo.allStatsPercent + (ruleInfo.statsPercent[key] || 0);
+        const ruleLine = appliedPercent > 0
+          ? `<div class="rule-effect">Final con reglas: ${formatNumber(finalValue)} (+${formatNumber(appliedPercent)}%)</div>`
+          : "";
+
+        stat.innerHTML = `
+          <div class="stat-head">
+            <div class="stat-name">${statNames[key] || key}</div>
+            <div class="stat-value">${formatNumber(value)}</div>
+          </div>
+          <div class="progress"><div class="bar" style="width:${percent}%"></div></div>
+          ${ruleLine}
+          <div class="stat-controls" style="margin-top:10px">
+            <input type="number" step="0.1" value="${value}" aria-label="${statNames[key] || key}">
+            <button class="secondary" title="Aumentar">+</button>
+            <button class="secondary" title="Disminuir">-</button>
+          </div>
+        `;
+
+        const input = stat.querySelector("input");
+        const plus = stat.querySelectorAll("button")[0];
+        const minus = stat.querySelectorAll("button")[1];
+
+        input.addEventListener("change", () => {
+          data.stats[key] = clampNumber(input.value);
+          sync();
+        });
+
+        plus.addEventListener("click", () => {
+          data.stats[key] = Math.round((Number(data.stats[key] || 0) + 1) * 100) / 100;
+          addXP(2, false);
+          sync();
+        });
+
+        minus.addEventListener("click", () => {
+          data.stats[key] = Math.round(Math.max(0, Number(data.stats[key] || 0) - 1) * 100) / 100;
+          sync();
+        });
+
+        container.appendChild(stat);
+      });
+    }
+
+    function renderSummary(){
+      const totals = getTotals();
+      const strongest = data.abilities.length
+        ? [...data.abilities].sort((a,b)=>Number(b.power||0)-Number(a.power||0))[0]
+        : null;
+
+      const systemTotal = data.systemElements.reduce((sum, item) => sum + Number(item.value || 0), 0);
+
+      document.getElementById("levelDisplay").textContent = data.level;
+      document.getElementById("xpDisplay").textContent = `${formatNumber(data.xp)}/${formatNumber(xpNeeded())}`;
+      document.getElementById("xpBar").style.width = `${Math.min(100, (data.xp / xpNeeded()) * 100)}%`;
+      document.getElementById("powerDisplay").textContent = formatNumber(Math.round(totals.combatPower));
+
+      document.getElementById("systemElementCountTop").textContent = data.systemElements.length;
+      document.getElementById("systemElementCountPanel").textContent = data.systemElements.length;
+      document.getElementById("firstSystemElementPanel").textContent = data.systemElements.length
+        ? shortText(`${data.systemElements[0].icon} ${data.systemElements[0].name}`, 14)
+        : "-";
+      document.getElementById("systemElementTotalPanel").textContent = formatNumber(systemTotal);
+
+      const ruleInfo = getRuleInfo();
+      document.getElementById("systemRuleCountPanel").textContent = ruleInfo.activeRules;
+      document.getElementById("systemRuleStatsBonusPanel").textContent = `+${formatNumber(getTotalStatsBonusPercent())}%`;
+      document.getElementById("systemRuleAbilityBonusPanel").textContent = `+${formatNumber(ruleInfo.abilitiesPercent)}%`;
+
+      document.getElementById("abilityCountPanel").textContent = data.abilities.length;
+      document.getElementById("abilityPowerPanel").textContent = formatNumber(totals.abilityPower);
+      document.getElementById("strongestAbilityPanel").textContent = strongest ? shortText(strongest.name, 11) : "-";
+    }
+
+    function renderSystemElementsModal(){
+      const container = document.getElementById("systemElementsContainer");
+      container.innerHTML = "";
+
+      if(data.systemElements.length === 0){
+        container.innerHTML = `<div class="notice">No hay elementos del sistema.</div>`;
+        return;
+      }
+
+      data.systemElements.forEach((item, index) => {
+        const box = document.createElement("div");
+        box.className = "item-card";
+        box.innerHTML = `
+          <div>
+            <strong>${item.icon} ${item.name}</strong>
+            <small>Valor: ${formatNumber(item.value)}${item.description ? " | " + item.description : ""}</small>
+          </div>
+          <div class="item-actions">
+            <button class="secondary" onclick="increaseSystemElement(${index})">+</button>
+            <button class="secondary" onclick="decreaseSystemElement(${index})">-</button>
+            <button class="secondary" onclick="editSystemElement(${index})">Editar</button>
+            <button class="secondary" onclick="moveSystemElementUp(${index})">↑</button>
+            <button class="secondary" onclick="moveSystemElementDown(${index})">↓</button>
+            <button class="danger" onclick="deleteSystemElement(${index})">Eliminar</button>
+          </div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function saveSystemElement(){
+      const name = document.getElementById("systemElementName").value.trim();
+      const icon = document.getElementById("systemElementIcon").value;
+      const value = clampNumber(document.getElementById("systemElementValue").value, 0, 9999999);
+      const description = document.getElementById("systemElementDescription").value.trim();
+
+      if(!name){
+        alert("Ponle nombre al elemento del sistema.");
+        return;
+      }
+
+      const id = editingSystemElementIndex === null
+        ? createId("el")
+        : data.systemElements[editingSystemElementIndex].id;
+
+      const item = { id, name, icon, value, description };
+
+      if(editingSystemElementIndex === null){
+        data.systemElements.push(item);
+      }else{
+        data.systemElements[editingSystemElementIndex] = item;
+      }
+
+      clearSystemElementForm();
+      sync();
+    }
+
+    function editSystemElement(index){
+      const item = data.systemElements[index];
+      editingSystemElementIndex = index;
+      document.getElementById("systemElementName").value = item.name || "";
+      document.getElementById("systemElementIcon").value = item.icon || "✦";
+      document.getElementById("systemElementValue").value = item.value || 0;
+      document.getElementById("systemElementDescription").value = item.description || "";
+      document.getElementById("systemElementSaveButton").textContent = "Guardar elemento";
+    }
+
+    function clearSystemElementForm(){
+      editingSystemElementIndex = null;
+      document.getElementById("systemElementName").value = "";
+      document.getElementById("systemElementIcon").value = "↺";
+      document.getElementById("systemElementValue").value = 0;
+      document.getElementById("systemElementDescription").value = "";
+      document.getElementById("systemElementSaveButton").textContent = "Agregar elemento";
+    }
+
+    function increaseSystemElement(index){
+      data.systemElements[index].value = Number(data.systemElements[index].value || 0) + 1;
+      sync();
+    }
+
+    function decreaseSystemElement(index){
+      data.systemElements[index].value = Math.max(0, Number(data.systemElements[index].value || 0) - 1);
+      sync();
+    }
+
+    function deleteSystemElement(index){
+      const removed = data.systemElements[index];
+      data.systemElements.splice(index, 1);
+      if(removed && removed.id){
+        data.systemRules = data.systemRules.filter(rule => rule.elementId !== removed.id);
+      }
+      clearSystemElementForm();
+      sync();
+    }
+
+    function moveSystemElementUp(index){
+      if(index <= 0) return;
+      const temp = data.systemElements[index - 1];
+      data.systemElements[index - 1] = data.systemElements[index];
+      data.systemElements[index] = temp;
+      sync();
+    }
+
+    function moveSystemElementDown(index){
+      if(index >= data.systemElements.length - 1) return;
+      const temp = data.systemElements[index + 1];
+      data.systemElements[index + 1] = data.systemElements[index];
+      data.systemElements[index] = temp;
+      sync();
+    }
+
+    function openSystemElementModal(){
+      document.getElementById("systemElementModal").classList.add("show");
+    }
+
+    function closeSystemElementModal(){
+      document.getElementById("systemElementModal").classList.remove("show");
+      clearSystemElementForm();
+    }
+
+    function openSystemRuleModal(){
+      renderRuleElementOptions();
+      toggleRuleStatTarget();
+      document.getElementById("systemRuleModal").classList.add("show");
+    }
+
+    function closeSystemRuleModal(){
+      document.getElementById("systemRuleModal").classList.remove("show");
+      clearSystemRuleForm();
+    }
+
+    function renderRuleElementOptions(){
+      const select = document.getElementById("systemRuleElement");
+      if(!select) return;
+
+      select.innerHTML = "";
+
+      if(!data.systemElements.length){
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Primero agrega un elemento";
+        select.appendChild(option);
+        return;
+      }
+
+      data.systemElements.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = `${item.icon} ${item.name}`;
+        select.appendChild(option);
+      });
+    }
+
+    function toggleRuleStatTarget(){
+      const target = document.getElementById("systemRuleTarget").value;
+      const statTarget = document.getElementById("systemRuleStatTarget");
+      statTarget.disabled = target !== "specificStat";
+      statTarget.style.opacity = target === "specificStat" ? "1" : ".45";
+    }
+
+    function saveSystemRule(){
+      if(!data.systemElements.length){
+        alert("Primero agrega al menos un elemento del sistema.");
+        return;
+      }
+
+      const name = document.getElementById("systemRuleName").value.trim();
+      const elementId = document.getElementById("systemRuleElement").value;
+      const mode = document.getElementById("systemRuleMode").value;
+      const threshold = clampNumber(document.getElementById("systemRuleThreshold").value, 1, 9999999);
+      const percent = Number(document.getElementById("systemRulePercent").value || 0);
+      const target = document.getElementById("systemRuleTarget").value;
+      const statKey = document.getElementById("systemRuleStatTarget").value;
+
+      if(!name){
+        alert("Ponle nombre a la regla.");
+        return;
+      }
+
+      if(!elementId){
+        alert("Selecciona un elemento del sistema.");
+        return;
+      }
+
+      const id = editingSystemRuleIndex === null
+        ? createId("rule")
+        : data.systemRules[editingSystemRuleIndex].id;
+
+      const rule = {
+        id,
+        name,
+        elementId,
+        mode,
+        threshold,
+        percent,
+        target,
+        statKey,
+        active: true
+      };
+
+      if(editingSystemRuleIndex === null){
+        data.systemRules.push(rule);
+      }else{
+        data.systemRules[editingSystemRuleIndex] = {
+          ...rule,
+          active: data.systemRules[editingSystemRuleIndex].active
+        };
+      }
+
+      clearSystemRuleForm();
+      sync();
+    }
+
+    function clearSystemRuleForm(){
+      editingSystemRuleIndex = null;
+      const name = document.getElementById("systemRuleName");
+      if(!name) return;
+
+      name.value = "";
+      document.getElementById("systemRuleMode").value = "cada";
+      document.getElementById("systemRuleThreshold").value = 1;
+      document.getElementById("systemRulePercent").value = 20;
+      document.getElementById("systemRuleTarget").value = "allStats";
+      document.getElementById("systemRuleStatTarget").value = "atk";
+      document.getElementById("systemRuleSaveButton").textContent = "Agregar regla";
+      renderRuleElementOptions();
+      toggleRuleStatTarget();
+    }
+
+    function editSystemRule(index){
+      const rule = data.systemRules[index];
+      editingSystemRuleIndex = index;
+
+      renderRuleElementOptions();
+
+      document.getElementById("systemRuleName").value = rule.name || "";
+      document.getElementById("systemRuleElement").value = rule.elementId || "";
+      document.getElementById("systemRuleMode").value = rule.mode || "cada";
+      document.getElementById("systemRuleThreshold").value = rule.threshold || 1;
+      document.getElementById("systemRulePercent").value = rule.percent || 0;
+      document.getElementById("systemRuleTarget").value = rule.target || "allStats";
+      document.getElementById("systemRuleStatTarget").value = rule.statKey || "atk";
+      document.getElementById("systemRuleSaveButton").textContent = "Guardar regla";
+
+      toggleRuleStatTarget();
+    }
+
+    function toggleSystemRule(index){
+      data.systemRules[index].active = !data.systemRules[index].active;
+      sync();
+    }
+
+    function deleteSystemRule(index){
+      data.systemRules.splice(index, 1);
+      clearSystemRuleForm();
+      sync();
+    }
+
+    function renderSystemRulesModal(){
+      const container = document.getElementById("systemRulesContainer");
+      if(!container) return;
+
+      container.innerHTML = "";
+
+      if(!data.systemRules.length){
+        container.innerHTML = `<div class="notice">No hay reglas del sistema todavía.</div>`;
+        return;
+      }
+
+      data.systemRules.forEach((rule, index) => {
+        const item = getSystemElementById(rule.elementId);
+        const activations = getRuleActivationCount(rule);
+        const totalBonus = activations * Number(rule.percent || 0);
+
+        let targetText = "todas las estadísticas";
+        if(rule.target === "specificStat") targetText = statNames[rule.statKey] || rule.statKey;
+        if(rule.target === "abilities") targetText = "poder de habilidades";
+
+        const modeText = rule.mode === "minimo"
+          ? `al alcanzar ${formatNumber(rule.threshold)}`
+          : `por cada ${formatNumber(rule.threshold)}`;
+
+        const box = document.createElement("div");
+        box.className = "item-card";
+        box.innerHTML = `
+          <div>
+            <strong>${rule.active ? "🟢" : "⚪"} ${rule.name}</strong>
+            <small>Elemento: ${item ? item.icon + " " + item.name : "Elemento eliminado"} | Modo: ${modeText}</small>
+            <small>Efecto: +${formatNumber(rule.percent)}% a ${targetText} | Activaciones: ${formatNumber(activations)} | Bonus actual: +${formatNumber(totalBonus)}%</small>
+          </div>
+          <div class="item-actions">
+            <button class="secondary" onclick="toggleSystemRule(${index})">${rule.active ? "Desactivar" : "Activar"}</button>
+            <button class="secondary" onclick="editSystemRule(${index})">Editar</button>
+            <button class="danger" onclick="deleteSystemRule(${index})">Eliminar</button>
+          </div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+
+    function renderAbilitiesModal(){
+      const container = document.getElementById("abilitiesContainer");
+      container.innerHTML = "";
+
+      if(data.abilities.length === 0){
+        container.innerHTML = `<div class="notice">No hay habilidades todavía.</div>`;
+        return;
+      }
+
+      updateMainSkillLimitText();
+
+      data.abilities.forEach((ability, index) => {
+        const item = document.createElement("div");
+        item.className = "item-card";
+
+        const mainTag = ability.main ? `<span class="main-skill-tag">Principal</span>` : "";
+        const canMarkMain = ability.main || countMainAbilities() < getPreviewSkillLimit();
+        const mainButtonText = ability.main ? "Quitar principal" : "Hacer principal";
+        const mainButtonDisabled = !canMarkMain ? "disabled" : "";
+
+        item.innerHTML = `
+          <div>
+            <strong>${ability.name}${mainTag}</strong>
+            <small>Tipo: ${ability.type || "Sin tipo"} | Poder: ${formatNumber(ability.power)} | Nivel: ${formatNumber(ability.level)}</small>
+            <small>${getAbilityText(ability)}</small>
+          </div>
+          <div class="item-actions">
+            <button class="secondary" ${mainButtonDisabled} onclick="toggleMainAbility(${index})">${mainButtonText}</button>
+            <button class="secondary" onclick="upgradeAbility(${index})">+ poder</button>
+            <button class="secondary" onclick="downgradeAbility(${index})">- poder</button>
+            <button class="warn" onclick="boostAbilityThirty(${index})">+30%</button>
+            <button class="good" onclick="levelAbility(${index})">Subir nivel</button>
+            <button class="danger" onclick="deleteAbility(${index})">Eliminar</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+
+    const previewThemes = ["preview-theme-dark", "preview-theme-violet", "preview-theme-blue", "preview-theme-gold"];
+    let previewThemeIndex = 0;
+
+    function getPreviewCard(){
+      return document.getElementById("exportCard");
+    }
+
+    function togglePreviewAnimation(){
+      const card = getPreviewCard();
+      if(!card) return;
+      card.classList.toggle("animations-paused");
+    }
+
+    function togglePreviewGlow(){
+      const card = getPreviewCard();
+      if(!card) return;
+      card.classList.toggle("preview-glow");
+    }
+
+    function togglePreviewZoom(){
+      const card = getPreviewCard();
+      if(!card) return;
+      card.classList.toggle("preview-zoomed");
+    }
+
+    function changePreviewTheme(){
+      const card = getPreviewCard();
+      if(!card) return;
+
+      previewThemes.forEach(theme => card.classList.remove(theme));
+      previewThemeIndex = (previewThemeIndex + 1) % previewThemes.length;
+      card.classList.add(previewThemes[previewThemeIndex]);
+      pulsePreview();
+    }
+
+    function pulsePreview(){
+      const card = getPreviewCard();
+      if(!card) return;
+
+      card.classList.remove("preview-pulse");
+      void card.offsetWidth;
+      card.classList.add("preview-pulse");
+    }
+
+    function bindPreviewInteractions(){
+      const card = getPreviewCard();
+      if(!card) return;
+
+      card.querySelectorAll(".preview-clickable").forEach(element => {
+        element.onclick = event => {
+          event.stopPropagation();
+          card.querySelectorAll(".preview-selected").forEach(item => item.classList.remove("preview-selected"));
+          element.classList.add("preview-selected");
+          pulsePreview();
+        };
+      });
+    }
+
+
+    function openPreviewSkillsModal(event){
+      if(event) event.stopPropagation();
+      renderPreviewSkillsFullList();
+      document.getElementById("previewSkillsModal").classList.add("show");
+    }
+
+    function closePreviewSkillsModal(){
+      document.getElementById("previewSkillsModal").classList.remove("show");
+    }
+
+    function renderPreviewSkillsFullList(){
+      const container = document.getElementById("previewSkillsFullList");
+      if(!container) return;
+
+      container.innerHTML = "";
+
+      if(!data.abilities.length){
+        container.innerHTML = `<div class="notice">No hay habilidades registradas.</div>`;
+        return;
+      }
+
+      const totals = getTotals();
+      const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
+
+      data.abilities.forEach(ability => {
+        const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
+        const card = document.createElement("div");
+        card.className = "preview-skill-full-card";
+        card.innerHTML = `
+          <strong>
+            <span>${ability.name}${ability.main ? " ★" : ""}</span>
+            <span>${formatNumber(finalAbilityPower)}</span>
+          </strong>
+          <small>Tipo: ${ability.type || "Sin tipo"} | Nivel: ${formatNumber(ability.level)} | Poder base: ${formatNumber(ability.power)}</small>
+          <small>${getAbilityText(ability)}</small>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPreviewTopCounters(){
+      const container = document.getElementById("previewTopCounters");
+
+      if(!data.systemElements.length){
+        container.innerHTML = `<span class="export-token"><span class="symbol">✦</span><b>0</b></span><span style="font-size:30px; line-height:1;">×</span>`;
+        return;
+      }
+
+      const visibleElements = data.systemElements.slice(0, 6).map(item => `
+        <span class="export-token preview-clickable" title="${item.name}">
+          <span class="symbol">${item.icon}</span>
+          <b>${formatNumber(item.value)}</b>
+        </span>
+      `).join("");
+
+      container.innerHTML = `${visibleElements}<span style="font-size:30px; line-height:1;">×</span>`;
+    }
+
+    function renderPreview(){
+      const totals = getTotals();
+      const finalStats = totals.finalStats;
+
+      renderPreviewTopCounters();
+
+      document.getElementById("previewFandomTitle").textContent = `Fandom: ${data.fandom || "Sin fandom"}`;
+
+      document.getElementById("previewCombatPower").textContent = formatNumber(Math.round(totals.combatPower));
+      document.getElementById("previewDefensePower").textContent = formatNumber(Math.round(totals.defensePower));
+      document.getElementById("previewCorePower").textContent = formatNumber(Math.round(totals.corePower));
+
+      document.getElementById("previewName").textContent = data.name || "Sin nombre";
+      document.getElementById("previewGeneralInfo").textContent =
+        `Edad ${data.age || 0} | ${data.classType || "Sin clase"} | ${data.element || "Sin elemento"}`;
+      document.getElementById("previewDescription").textContent = shortText(data.description || "", 90);
+
+      document.getElementById("previewLevel").textContent = data.level;
+      document.getElementById("previewAtkRight").textContent = formatNumber(Math.round(totals.attackPower));
+      document.getElementById("previewMagicRight").textContent = formatNumber(Math.round(Number(finalStats.magia || 0)));
+      document.getElementById("previewSpeedRight").textContent = formatNumber(Math.round(Number(finalStats.velocidad || 0)));
+      document.getElementById("previewDefRight").textContent = formatNumber(Math.round(Number(finalStats.defensa || 0)));
+
+      const previewStats = document.getElementById("previewStatsList");
+      previewStats.innerHTML = "";
+      const mainStats = ["atk", "vida", "defensa", "magia", "velocidad", "resistencia", "inteligencia"];
+
+      mainStats.forEach(key => {
+        const row = document.createElement("div");
+        row.className = "export-stat-row";
+        row.innerHTML = `<span>${statNames[key] || key}</span><span>${formatNumber(finalStats[key])}</span>`;
+        previewStats.appendChild(row);
+      });
+
+      const previewAbilities = document.getElementById("previewAbilities");
+      const moreButton = document.getElementById("previewMoreSkillsButton");
+      previewAbilities.innerHTML = "";
+
+      if(data.abilities.length === 0){
+        previewAbilities.innerHTML = `
+          <div class="export-ability">
+            <strong><span>Sin habilidades</span><span>0</span></strong>
+            <small>Agrega habilidades desde la ventana de habilidades.</small>
+          </div>`;
+        if(moreButton) moreButton.classList.add("hidden");
+        bindPreviewInteractions();
+        return;
+      }
+
+      const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
+      const visibleAbilities = getMainAbilities();
+
+      visibleAbilities.forEach(ability => {
+        const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
+        const box = document.createElement("div");
+        box.className = "export-ability preview-clickable";
+        box.title = ability.name;
+        box.innerHTML = `
+          <strong>
+            <span>${shortText(ability.name, 22)}${ability.main ? " ★" : ""}</span>
+            <span>${formatNumber(finalAbilityPower)}</span>
+          </strong>
+          <small>Lv. ${formatNumber(ability.level)} | ${ability.type || "Sin tipo"} | ${shortText(getAbilityText(ability), 95)}</small>
+        `;
+        previewAbilities.appendChild(box);
+      });
+
+      if(moreButton){
+        if(data.abilities.length > getPreviewSkillLimit()){
+          moreButton.classList.remove("hidden");
+          moreButton.textContent = `Ver todas las habilidades (${data.abilities.length})`;
+        }else{
+          moreButton.classList.add("hidden");
+        }
+      }
+
+      renderPreviewSkillsFullList();
+      bindPreviewInteractions();
+    }
+
+    function sync(){
+      renderImage();
+      renderStats();
+      renderSummary();
+      renderSystemElementsModal();
+      renderRuleElementOptions();
+      renderSystemRulesModal();
+      renderAbilitiesModal();
+      renderPreview();
+      scheduleResponsiveUpdate();
+      saveData(false);
+    }
+
+    function addXP(amount, shouldRender = true){
+      data.xp += amount;
+
+      while(data.xp >= xpNeeded()){
+        data.xp -= xpNeeded();
+        levelUp(false);
+      }
+
+      if(shouldRender) sync();
+    }
+
+    function levelUp(shouldRender = true){
+      data.level += 1;
+
+      const increases = {
+        atk: 60,
+        vida: 12,
+        defensa: 30,
+        magia: 12,
+        velocidad: 5,
+        resistencia: 8,
+        inteligencia: 6
+      };
+
+      Object.keys(data.stats).forEach(key => {
+        data.stats[key] = Math.round((Number(data.stats[key] || 0) + (increases[key] || 3)) * 100) / 100;
+      });
+
+      data.abilities = data.abilities.map(ability => ({
+        ...ability,
+        power: Math.round((Number(ability.power || 0) + 10) * 100) / 100
+      }));
+
+      if(shouldRender) sync();
+    }
+
+    function trainAll(){
+      Object.keys(data.stats).forEach(key => {
+        data.stats[key] = Math.round((Number(data.stats[key] || 0) + 5) * 100) / 100;
+      });
+      addXP(50, false);
+      sync();
+    }
+
+    function boostThirtyPercent(){
+      Object.keys(data.stats).forEach(key => {
+        data.stats[key] = Math.round(Number(data.stats[key] || 0) * 1.3 * 100) / 100;
+      });
+
+      data.abilities = data.abilities.map(ability => ({
+        ...ability,
+        power: Math.round(Number(ability.power || 0) * 1.3 * 100) / 100
+      }));
+
+      addXP(75, false);
+      sync();
+    }
+
+    function randomBoost(){
+      const keys = Object.keys(data.stats);
+      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+      const amount = Math.floor(Math.random() * 10) + 5;
+      data.stats[randomKey] = Math.round((Number(data.stats[randomKey] || 0) + amount) * 100) / 100;
+      addXP(20, false);
+      sync();
+    }
+
+    function addAbility(){
+      const name = document.getElementById("abilityName").value.trim();
+      const type = document.getElementById("abilityType").value.trim();
+      const power = clampNumber(document.getElementById("abilityPower").value, 1, 9999999);
+      const description = document.getElementById("abilityDescription").value.trim();
+      let main = document.getElementById("abilityMain").checked;
+
+      if(main && countMainAbilities() >= getPreviewSkillLimit()){
+        alert("Ya llegaste al límite de habilidades principales para la vista previa.");
+        main = false;
+      }
+
+      if(!name){
+        alert("Ponle nombre a la habilidad.");
+        return;
+      }
+
+      data.abilities.push({ name, type, power, level: 1, main, description });
+
+      document.getElementById("abilityName").value = "";
+      document.getElementById("abilityType").value = "";
+      document.getElementById("abilityPower").value = 10;
+      document.getElementById("abilityDescription").value = "";
+      document.getElementById("abilityMain").checked = false;
+
+      addXP(15, false);
+      sync();
+    }
+
+    function upgradeAbility(index){
+      data.abilities[index].power = Math.round((Number(data.abilities[index].power || 0) + 10) * 100) / 100;
+      addXP(10, false);
+      sync();
+    }
+
+    function downgradeAbility(index){
+      data.abilities[index].power = Math.max(0, Math.round((Number(data.abilities[index].power || 0) - 10) * 100) / 100);
+      sync();
+    }
+
+    function boostAbilityThirty(index){
+      data.abilities[index].power = Math.round(Number(data.abilities[index].power || 0) * 1.3 * 100) / 100;
+      addXP(10, false);
+      sync();
+    }
+
+    function levelAbility(index){
+      data.abilities[index].level += 1;
+      data.abilities[index].power = Math.round((Number(data.abilities[index].power || 0) + 15) * 100) / 100;
+      addXP(15, false);
+      sync();
+    }
+
+    function deleteAbility(index){
+      data.abilities.splice(index, 1);
+      sync();
+    }
+
+    function toggleMainAbility(index){
+      const ability = data.abilities[index];
+
+      if(!ability.main && countMainAbilities() >= getPreviewSkillLimit()){
+        alert("Ya llegaste al límite de habilidades principales para la vista previa.");
+        return;
+      }
+
+      ability.main = !ability.main;
+      sync();
+    }
+
+
+    function openAbilityModal(){
+      document.getElementById("abilityModal").classList.add("show");
+    }
+
+    function closeAbilityModal(){
+      document.getElementById("abilityModal").classList.remove("show");
+    }
+
+    function resetCharacter(){
+      const ok = confirm("¿Seguro que quieres reiniciar la ficha? Se perderán los datos guardados.");
+      if(!ok) return;
+      data = JSON.parse(JSON.stringify(defaultData));
+      localStorage.removeItem("personajesDeRolData");
+      bindInputs();
+      sync();
+    }
+
+    function saveData(showAlert = true){
+      localStorage.setItem("personajesDeRolData", JSON.stringify(data));
+      if(showAlert) alert("Ficha guardada correctamente.");
+    }
+
+    function loadData(){
+      const saved = localStorage.getItem("personajesDeRolData");
+      if(saved){
+        try{
+          const parsed = JSON.parse(saved);
+          data = {
+            ...JSON.parse(JSON.stringify(defaultData)),
+            ...parsed,
+            stats: cleanStats(parsed.stats || defaultData.stats),
+            abilities: Array.isArray(parsed.abilities) ? parsed.abilities : [],
+            systemElements: Array.isArray(parsed.systemElements) ? parsed.systemElements : JSON.parse(JSON.stringify(defaultData.systemElements)),
+            systemRules: Array.isArray(parsed.systemRules) ? parsed.systemRules : JSON.parse(JSON.stringify(defaultData.systemRules)),
+            previewSkillLimit: Number(parsed.previewSkillLimit || defaultData.previewSkillLimit || 5)
+          };
+          ensureDataIntegrity();
+        }catch(error){
+          data = JSON.parse(JSON.stringify(defaultData));
+        }
+      }
+    }
+
+    function exportData(){
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(data.name || "personaje").replace(/\s+/g, "_").toLowerCase()}_stats.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(event){
+      const file = event.target.files[0];
+      if(!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const imported = JSON.parse(reader.result);
+          data = {
+            ...JSON.parse(JSON.stringify(defaultData)),
+            ...imported,
+            stats: cleanStats(imported.stats || defaultData.stats),
+            abilities: Array.isArray(imported.abilities) ? imported.abilities : [],
+            systemElements: Array.isArray(imported.systemElements) ? imported.systemElements : JSON.parse(JSON.stringify(defaultData.systemElements)),
+            systemRules: Array.isArray(imported.systemRules) ? imported.systemRules : JSON.parse(JSON.stringify(defaultData.systemRules)),
+            previewSkillLimit: Number(imported.previewSkillLimit || defaultData.previewSkillLimit || 5)
+          };
+          ensureDataIntegrity();
+          bindInputs();
+          sync();
+        }catch(error){
+          alert("El archivo no es válido.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+
+    function getScreenProfile(){
+      const viewport = window.visualViewport;
+      const width = Math.round(viewport?.width || window.innerWidth || document.documentElement.clientWidth || screen.width);
+      const height = Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || screen.height);
+      const orientation = width >= height ? "horizontal" : "vertical";
+      const pointerCoarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+      let screenSize = "xl";
+      let device = "computadora";
+      let label = "Computadora";
+
+      if(width <= 390){
+        screenSize = "xxs";
+        device = "celular";
+        label = "Celular pequeño";
+      }else if(width <= 600){
+        screenSize = "xs";
+        device = "celular";
+        label = "Celular";
+      }else if(width <= 820){
+        screenSize = "sm";
+        device = "tablet";
+        label = "Tablet vertical";
+      }else if(width <= 1100){
+        screenSize = "md";
+        device = pointerCoarse ? "tablet" : "laptop";
+        label = pointerCoarse ? "Tablet horizontal" : "Laptop pequeña";
+      }else if(width <= 1440){
+        screenSize = "lg";
+        device = "laptop";
+        label = "Laptop";
+      }else{
+        screenSize = "xl";
+        device = "computadora";
+        label = "Computadora";
+      }
+
+      return { width, height, orientation, pointerCoarse, screenSize, device, label };
+    }
+
+    function applyResponsiveLayout(){
+      const profile = getScreenProfile();
+
+      document.body.dataset.device = profile.device;
+      document.body.dataset.screen = profile.screenSize;
+      document.body.dataset.orientation = profile.orientation;
+
+      document.documentElement.style.setProperty("--viewport-width", `${profile.width}px`);
+      document.documentElement.style.setProperty("--viewport-height", `${profile.height}px`);
+
+      const display = document.getElementById("deviceDisplay");
+      if(display){
+        display.textContent = `${profile.label} · ${profile.width}×${profile.height} · ${profile.orientation}`;
+      }
+
+      fitPreviewCard(profile);
+    }
+
+    function detectDevice(){
+      applyResponsiveLayout();
+    }
+
+    function fitPreviewCard(profile = getScreenProfile()){
+      const shell = document.querySelector(".preview-shell");
+      const card = document.getElementById("exportCard");
+      if(!shell || !card) return;
+
+      const baseWidth = 1200;
+      const baseHeight = 675;
+
+      // Quitamos temporalmente transform para medir bien.
+      card.style.transform = "none";
+
+      const shellStyles = window.getComputedStyle(shell);
+      const paddingX = parseFloat(shellStyles.paddingLeft || 0) + parseFloat(shellStyles.paddingRight || 0);
+      const availableWidth = Math.max(220, shell.clientWidth - paddingX);
+
+      let scale = availableWidth / baseWidth;
+
+      // En celular dejamos que el preview quepa completo en ancho.
+      // En pantallas grandes no crece más de su tamaño original.
+      scale = Math.min(1, Math.max(0.18, scale));
+
+      card.style.transformOrigin = "top left";
+      card.style.transform = `scale(${scale})`;
+
+      const newHeight = Math.ceil(baseHeight * scale);
+      shell.style.height = `${newHeight + 16}px`;
+      shell.style.minHeight = `${newHeight + 16}px`;
+    }
+
+    function scheduleResponsiveUpdate(){
+      requestAnimationFrame(() => {
+        applyResponsiveLayout();
+        setTimeout(applyResponsiveLayout, 80);
+      });
+    }
+
+    async function captureExportCard(backgroundColor){
+      const card = document.getElementById("exportCard");
+      const shell = document.querySelector(".preview-shell");
+      const previousTransform = card.style.transform;
+      const previousShellHeight = shell ? shell.style.height : "";
+      const wasPaused = card.classList.contains("animations-paused");
+      card.classList.add("animations-paused");
+
+      // Para exportar, capturamos en tamaño completo aunque en pantalla esté escalado.
+      card.style.transform = "none";
+      if(shell) shell.style.height = "auto";
+
+      await new Promise(resolve => requestAnimationFrame(resolve));
+
+      const canvas = await html2canvas(card, {
+        backgroundColor,
+        scale: 2,
+        useCORS: true
+      });
+
+      card.style.transform = previousTransform;
+      if(!wasPaused) card.classList.remove("animations-paused");
+      if(shell) shell.style.height = previousShellHeight;
+      fitPreviewCard();
+
+      return canvas;
+    }
+
+    async function exportImage(){
+      if(!window.html2canvas){
+        alert("No se pudo cargar html2canvas. Abre la app con internet para exportar imagen.");
+        return;
+      }
+
+      const canvas = await captureExportCard(null);
+
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(data.name || "personaje").replace(/\s+/g, "_").toLowerCase()}_ficha.png`;
+      a.click();
+    }
+
+    async function exportPDF(){
+      if(!window.html2canvas || !window.jspdf){
+        alert("No se pudieron cargar las librerías para PDF. Abre la app con internet para exportar PDF.");
+        return;
+      }
+
+      const canvas = await captureExportCard("#303b45");
+
+      const imgData = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("l", "pt", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+      const width = canvas.width * ratio;
+      const height = canvas.height * ratio;
+      const x = (pageWidth - width) / 2;
+      const y = (pageHeight - height) / 2;
+
+      pdf.addImage(imgData, "PNG", x, y, width, height);
+      pdf.save(`${(data.name || "personaje").replace(/\s+/g, "_").toLowerCase()}_ficha.pdf`);
+    }
+
+    document.getElementById("imageUpload").addEventListener("change", event => {
+      const file = event.target.files[0];
+      if(!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        data.image = reader.result;
+        sync();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    window.addEventListener("click", event => {
+      const abilityModal = document.getElementById("abilityModal");
+      const systemModal = document.getElementById("systemElementModal");
+      const ruleModal = document.getElementById("systemRuleModal");
+      const previewSkillsModal = document.getElementById("previewSkillsModal");
+
+      if(event.target === abilityModal) closeAbilityModal();
+      if(event.target === systemModal) closeSystemElementModal();
+      if(event.target === ruleModal) closeSystemRuleModal();
+      if(event.target === previewSkillsModal) closePreviewSkillsModal();
+    });
+
+    loadData();
+    ensureDataIntegrity();
+    bindInputs();
+    sync();
+    scheduleResponsiveUpdate();
+
+    window.addEventListener("resize", scheduleResponsiveUpdate);
+    window.addEventListener("orientationchange", () => setTimeout(scheduleResponsiveUpdate, 250));
+
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize", scheduleResponsiveUpdate);
+      window.visualViewport.addEventListener("scroll", fitPreviewCard);
+    }
+
+    document.addEventListener("DOMContentLoaded", scheduleResponsiveUpdate);
+    window.addEventListener("load", scheduleResponsiveUpdate);
+  </script>
+</body>
+</html>
