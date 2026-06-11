@@ -708,12 +708,21 @@
     }
 
     .export-abilities{
-      display:grid;
-      gap:9px;
-      max-height:210px;
-      overflow:hidden;
-    }
+      max-height:185px;
+  overflow:hidden;
+  display:grid;
+  gap:8px;
+  align-content:start;
+}
 
+.export-ability{
+  min-height:0;
+}
+
+.preview-more-skills{
+  flex-shrink:0;
+  margin-top:8px;
+}
     .export-ability{
       background:rgba(0,0,0,.16);
       border:1px solid rgba(255,255,255,.09);
@@ -3213,45 +3222,72 @@
       });
 
       const previewAbilities = document.getElementById("previewAbilities");
-      const moreButton = document.getElementById("previewMoreSkillsButton");
-      previewAbilities.innerHTML = "";
+const moreButton = document.getElementById("previewMoreSkillsButton");
+previewAbilities.innerHTML = "";
 
-      if(data.abilities.length === 0){
-        previewAbilities.innerHTML = `
-          <div class="export-ability">
-            <strong><span>Sin habilidades</span><span>0</span></strong>
-            <small>Agrega habilidades desde la ventana de habilidades.</small>
-          </div>`;
-        if(moreButton) moreButton.classList.add("hidden");
-        bindPreviewInteractions();
-        return;
-      }
+if(data.abilities.length === 0){
+  previewAbilities.innerHTML = `
+    <div class="export-ability">
+      <strong><span>Sin habilidades</span><span>0</span></strong>
+      <small>Agrega habilidades desde la ventana de habilidades.</small>
+    </div>`;
+  if(moreButton) moreButton.classList.add("hidden");
+  bindPreviewInteractions();
+  return;
+}
 
-      const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
-      const visibleAbilities = getMainAbilities();
+const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
+const orderedAbilities = [
+  ...data.abilities.filter(ability => ability.main),
+  ...data.abilities.filter(ability => !ability.main)
+];
 
-      visibleAbilities.forEach(ability => {
-        const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
-        const box = document.createElement("div");
-        box.className = "export-ability preview-clickable";
-        box.title = ability.name;
-        box.innerHTML = `
-          <strong>
-            <span>${shortText(ability.name, 22)}${ability.main ? " ★" : ""}</span>
-            <span>${formatNumber(finalAbilityPower)}</span>
-          </strong>
-          <small>Lv. ${formatNumber(ability.level)} | ${ability.type || "Sin tipo"} | ${shortText(getAbilityText(ability), 95)}</small>
-        `;
-        previewAbilities.appendChild(box);
-      });
+const limit = getPreviewSkillLimit();
+const candidateAbilities = orderedAbilities.slice(0, limit);
 
-      if(moreButton){
-        if(data.abilities.length > getPreviewSkillLimit()){
-          moreButton.classList.remove("hidden");
-          moreButton.textContent = `Ver todas las habilidades (${data.abilities.length})`;
-        }else{
-          moreButton.classList.add("hidden");
-        }
+if(moreButton){
+  moreButton.classList.add("hidden");
+}
+
+let shownCount = 0;
+
+candidateAbilities.forEach(ability => {
+  const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
+  const box = document.createElement("div");
+  box.className = "export-ability preview-clickable";
+  box.title = ability.name;
+  box.innerHTML = `
+    <strong>
+      <span>${shortText(ability.name, 22)}${ability.main ? " ★" : ""}</span>
+      <span>${formatNumber(finalAbilityPower)}</span>
+    </strong>
+    <small>Lv. ${formatNumber(ability.level)} | ${ability.type || "Sin tipo"} | ${shortText(getAbilityText(ability), 95)}</small>
+  `;
+
+  previewAbilities.appendChild(box);
+
+  const isOverflowing = previewAbilities.scrollHeight > previewAbilities.clientHeight + 1;
+
+  if(isOverflowing){
+    previewAbilities.removeChild(box);
+  }else{
+    shownCount += 1;
+  }
+});
+
+const hasHiddenSkills = data.abilities.length > shownCount;
+
+if(moreButton){
+  if(hasHiddenSkills){
+    moreButton.classList.remove("hidden");
+    moreButton.textContent = `Ver todas las habilidades (${data.abilities.length})`;
+  }else{
+    moreButton.classList.add("hidden");
+  }
+}
+
+renderPreviewSkillsFullList();
+bindPreviewInteractions();
       }
 
       renderPreviewSkillsFullList();
