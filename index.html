@@ -708,21 +708,12 @@
     }
 
     .export-abilities{
-      max-height:185px;
-  overflow:hidden;
-  display:grid;
-  gap:8px;
-  align-content:start;
-}
+      display:grid;
+      gap:9px;
+      max-height:210px;
+      overflow:hidden;
+    }
 
-.export-ability{
-  min-height:0;
-}
-
-.preview-more-skills{
-  flex-shrink:0;
-  margin-top:8px;
-}
     .export-ability{
       background:rgba(0,0,0,.16);
       border:1px solid rgba(255,255,255,.09);
@@ -1904,6 +1895,82 @@
         0 0 52px rgba(109,230,255,.42),
         0 0 76px rgba(255,79,216,.20),
         0 30px 48px rgba(0,0,0,.62);
+    }
+
+  
+    /* ==========================================================
+       CORRECCIÓN: HABILIDADES COMPLETAS EN VISTA PREVIA
+       Solo se muestran las habilidades que caben completas.
+       ========================================================== */
+
+    .export-abilities{
+      max-height:185px;
+      overflow:hidden;
+      display:grid;
+      gap:8px;
+      align-content:start;
+    }
+
+    .export-ability{
+      min-height:0;
+    }
+
+    .preview-more-skills{
+      flex-shrink:0;
+      margin-top:8px;
+    }
+
+  
+    /* ==========================================================
+       FIX DEFINITIVO: HABILIDADES SIN CORTE EN VISTA PREVIA
+       ========================================================== */
+
+    .export-abilities{
+      height:148px !important;
+      max-height:148px !important;
+      overflow:hidden !important;
+      display:flex !important;
+      flex-direction:column !important;
+      gap:8px !important;
+      align-content:start !important;
+    }
+
+    .export-ability{
+      height:66px !important;
+      min-height:66px !important;
+      max-height:66px !important;
+      overflow:hidden !important;
+      flex:0 0 66px !important;
+      padding:8px 10px !important;
+    }
+
+    .export-ability strong{
+      line-height:1.1 !important;
+      margin-bottom:3px !important;
+      font-size:13px !important;
+    }
+
+    .export-ability small{
+      line-height:1.25 !important;
+      font-size:10.5px !important;
+      display:-webkit-box !important;
+      -webkit-line-clamp:2 !important;
+      -webkit-box-orient:vertical !important;
+      overflow:hidden !important;
+    }
+
+    .preview-more-skills{
+      display:block;
+      width:100%;
+      height:34px;
+      margin-top:8px !important;
+      flex-shrink:0 !important;
+      font-size:12px;
+      line-height:1;
+    }
+
+    .preview-more-skills.hidden{
+      display:none !important;
     }
 
   </style>
@@ -3222,72 +3289,61 @@
       });
 
       const previewAbilities = document.getElementById("previewAbilities");
-const moreButton = document.getElementById("previewMoreSkillsButton");
-previewAbilities.innerHTML = "";
+      const moreButton = document.getElementById("previewMoreSkillsButton");
+      previewAbilities.innerHTML = "";
 
-if(data.abilities.length === 0){
-  previewAbilities.innerHTML = `
-    <div class="export-ability">
-      <strong><span>Sin habilidades</span><span>0</span></strong>
-      <small>Agrega habilidades desde la ventana de habilidades.</small>
-    </div>`;
-  if(moreButton) moreButton.classList.add("hidden");
-  bindPreviewInteractions();
-  return;
-}
+      if(data.abilities.length === 0){
+        previewAbilities.innerHTML = `
+          <div class="export-ability">
+            <strong><span>Sin habilidades</span><span>0</span></strong>
+            <small>Agrega habilidades desde la ventana de habilidades.</small>
+          </div>`;
+        if(moreButton) moreButton.classList.add("hidden");
+        bindPreviewInteractions();
+        return;
+      }
 
-const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
-const orderedAbilities = [
-  ...data.abilities.filter(ability => ability.main),
-  ...data.abilities.filter(ability => !ability.main)
-];
+      const abilityMultiplier = 1 + (totals.ruleInfo.abilitiesPercent / 100);
 
-const limit = getPreviewSkillLimit();
-const candidateAbilities = orderedAbilities.slice(0, limit);
+      const orderedAbilities = [
+        ...data.abilities.filter(ability => ability.main),
+        ...data.abilities.filter(ability => !ability.main)
+      ];
 
-if(moreButton){
-  moreButton.classList.add("hidden");
-}
+      // Límite visual real:
+      // El contenedor mide 148 px.
+      // Cada habilidad mide 66 px.
+      // El espacio entre habilidades es de 8 px.
+      // Caben completas 2 habilidades: 66 + 8 + 66 = 140 px.
+      // La tercera NO se muestra para evitar cortes.
+      const visualCapacity = 2;
+      const userLimit = getPreviewSkillLimit();
+      const visibleLimit = Math.min(visualCapacity, userLimit);
+      const visibleAbilities = orderedAbilities.slice(0, visibleLimit);
+      const hiddenCount = Math.max(0, data.abilities.length - visibleAbilities.length);
 
-let shownCount = 0;
+      visibleAbilities.forEach(ability => {
+        const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
+        const box = document.createElement("div");
+        box.className = "export-ability preview-clickable";
+        box.title = ability.name;
+        box.innerHTML = `
+          <strong>
+            <span>${shortText(ability.name, 22)}${ability.main ? " ★" : ""}</span>
+            <span>${formatNumber(finalAbilityPower)}</span>
+          </strong>
+          <small>Lv. ${formatNumber(ability.level)} | ${ability.type || "Sin tipo"} | ${shortText(getAbilityText(ability), 90)}</small>
+        `;
+        previewAbilities.appendChild(box);
+      });
 
-candidateAbilities.forEach(ability => {
-  const finalAbilityPower = Math.round(Number(ability.power || 0) * abilityMultiplier * 100) / 100;
-  const box = document.createElement("div");
-  box.className = "export-ability preview-clickable";
-  box.title = ability.name;
-  box.innerHTML = `
-    <strong>
-      <span>${shortText(ability.name, 22)}${ability.main ? " ★" : ""}</span>
-      <span>${formatNumber(finalAbilityPower)}</span>
-    </strong>
-    <small>Lv. ${formatNumber(ability.level)} | ${ability.type || "Sin tipo"} | ${shortText(getAbilityText(ability), 95)}</small>
-  `;
-
-  previewAbilities.appendChild(box);
-
-  const isOverflowing = previewAbilities.scrollHeight > previewAbilities.clientHeight + 1;
-
-  if(isOverflowing){
-    previewAbilities.removeChild(box);
-  }else{
-    shownCount += 1;
-  }
-});
-
-const hasHiddenSkills = data.abilities.length > shownCount;
-
-if(moreButton){
-  if(hasHiddenSkills){
-    moreButton.classList.remove("hidden");
-    moreButton.textContent = `Ver todas las habilidades (${data.abilities.length})`;
-  }else{
-    moreButton.classList.add("hidden");
-  }
-}
-
-renderPreviewSkillsFullList();
-bindPreviewInteractions();
+      if(moreButton){
+        if(hiddenCount > 0){
+          moreButton.classList.remove("hidden");
+          moreButton.textContent = `Ver todas las habilidades (${data.abilities.length})`;
+        }else{
+          moreButton.classList.add("hidden");
+        }
       }
 
       renderPreviewSkillsFullList();
